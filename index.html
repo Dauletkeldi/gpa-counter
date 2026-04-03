@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPA Counter</title>
+  <title>UniKit — GPA & Study Tools</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    /* ── Reset & base ─────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --card:      #22263a;
-      --border:    #2e3350;
-      --accent:    #6c63ff;
-      --accent2:   #a78bfa;
-      --green:     #22c55e;
-      --red:       #ef4444;
-      --text:      #e2e8f0;
-      --muted:     #8892b0;
-      --radius:    14px;
+      --bg:      #0f1117;
+      --surface: #1a1d27;
+      --card:    #22263a;
+      --border:  #2e3350;
+      --accent:  #6c63ff;
+      --accent2: #a78bfa;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --text:    #e2e8f0;
+      --muted:   #8892b0;
+      --radius:  14px;
     }
 
     body {
@@ -33,149 +33,84 @@
       padding: 40px 16px 80px;
     }
 
-    /* ── Header ───────────────────────────────────────── */
-    header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
+    header { text-align: center; margin-bottom: 36px; }
     header h1 {
-      font-size: 2.2rem;
-      font-weight: 700;
+      font-size: 2.2rem; font-weight: 800;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    header p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 0.95rem;
-    }
+    header p { color: var(--muted); margin-top: 6px; font-size: .95rem; }
 
-    /* ── Tab switcher ─────────────────────────────────── */
+    /* ── Tabs ── */
     .tabs {
-      display: flex;
-      gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 6px;
-      margin-bottom: 36px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 50px; padding: 6px; margin-bottom: 32px;
+      max-width: 700px; justify-content: center;
     }
     .tab-btn {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 10px 28px;
-      border-radius: 50px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .2s;
+      border: none; background: transparent; color: var(--muted);
+      padding: 9px 20px; border-radius: 50px; font-size: .9rem;
+      font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap;
     }
-    .tab-btn.active {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(108,99,255,.4);
-    }
+    .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 20px rgba(108,99,255,.4); }
 
-    /* ── Panels ───────────────────────────────────────── */
-    .panel { display: none; width: 100%; max-width: 640px; }
-    .panel.active { display: flex; flex-direction: column; gap: 20px; }
+    /* ── Panels ── */
+    .panel { display: none; width: 100%; max-width: 660px; }
+    .panel.active { display: flex; flex-direction: column; gap: 18px; }
 
-    /* ── Card ─────────────────────────────────────────── */
+    /* ── Card ── */
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
     }
     .card h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--accent2);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 16px;
+      font-size: .85rem; font-weight: 700; color: var(--accent2);
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px;
     }
 
-    /* ── Form elements ────────────────────────────────── */
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
+    /* ── Inputs ── */
+    label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
     input[type="number"], input[type="text"] {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color .2s;
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 10px 13px;
+      font-size: .95rem; outline: none; transition: border-color .2s;
     }
     input:focus { border-color: var(--accent); }
     input::placeholder { color: var(--muted); }
-
-    /* remove number spinners */
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* ── Course rows ──────────────────────────────────── */
-    .courses-list { display: flex; flex-direction: column; gap: 10px; }
-
+    /* ── Rows ── */
+    .courses-list { display: flex; flex-direction: column; gap: 9px; }
     .course-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 10px;
-      align-items: center;
-      animation: fadeIn .2s ease;
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: 9px; align-items: center; animation: fadeIn .2s ease;
     }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .course-row.wide { grid-template-columns: 2fr 1fr 1fr auto; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
 
     .remove-btn {
-      width: 34px; height: 34px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 1.1rem;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all .2s;
+      width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all .2s;
     }
     .remove-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
 
     .add-btn {
-      width: 100%;
-      padding: 10px;
-      margin-top: 4px;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all .2s;
+      width: 100%; padding: 9px; margin-top: 4px;
+      border: 1px dashed var(--border); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: .88rem;
+      cursor: pointer; transition: all .2s;
     }
     .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Buttons ──────────────────────────────────────── */
+    /* ── Buttons ── */
     .calc-btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: var(--radius);
+      width: 100%; padding: 13px; border: none; border-radius: var(--radius);
       background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: .02em;
+      color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer;
       transition: opacity .2s, transform .1s;
       box-shadow: 0 4px 24px rgba(108,99,255,.35);
     }
@@ -183,499 +118,1374 @@
     .calc-btn:active { transform: scale(.98); }
 
     .reset-btn {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all .2s;
+      width: 100%; padding: 10px; border: 1px solid var(--border);
+      border-radius: var(--radius); background: transparent; color: var(--muted);
+      font-size: .88rem; cursor: pointer; transition: all .2s;
     }
     .reset-btn:hover { border-color: var(--red); color: var(--red); }
 
-    /* ── Result box ───────────────────────────────────── */
+    /* ── Result box ── */
     .result-box {
-      display: none;
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 24px;
-      text-align: center;
-      animation: fadeIn .3s ease;
+      display: none; background: var(--surface); border: 1px solid var(--accent);
+      border-radius: var(--radius); padding: 22px; text-align: center;
+      animation: fadeIn .3s ease; position: relative;
     }
     .result-box.show { display: block; }
-    .result-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
+    .result-label { font-size: .82rem; color: var(--muted); margin-bottom: 6px; }
     .result-value {
-      font-size: 3rem;
-      font-weight: 800;
+      font-size: 3rem; font-weight: 800;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
       line-height: 1;
+      transition: all .4s;
     }
     .result-grade {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 4px 14px;
-      border-radius: 50px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      display: inline-block; margin-top: 10px; padding: 3px 13px;
+      border-radius: 50px; font-size: .82rem; font-weight: 600;
     }
+    .copy-btn {
+      position: absolute; top: 14px; right: 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: .78rem;
+      padding: 4px 10px; cursor: pointer; transition: all .2s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Error ────────────────────────────────────────── */
-    .error-msg {
-      display: none;
-      color: var(--red);
-      font-size: 0.85rem;
-      margin-top: -8px;
-    }
+    /* ── Error ── */
+    .error-msg { display: none; color: var(--red); font-size: .82rem; margin-top: 6px; }
     .error-msg.show { display: block; }
 
-    /* ── Breakdown table ──────────────────────────────── */
-    .breakdown {
-      margin-top: 16px;
-      text-align: left;
-    }
+    /* ── Table ── */
+    .breakdown { margin-top: 16px; text-align: left; }
     .breakdown-title {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      margin-bottom: 10px;
+      font-size: .78rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: 8px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-    }
-    th {
-      color: var(--muted);
-      font-weight: 500;
-      padding: 6px 8px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-    td {
-      padding: 8px 8px;
-      border-bottom: 1px solid var(--border);
-    }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    th { color: var(--muted); font-weight: 500; padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; }
+    td { padding: 7px 7px; border-bottom: 1px solid var(--border); }
     tr:last-child td { border-bottom: none; }
-    td:nth-child(2), td:nth-child(3) { color: var(--accent2); font-weight: 600; text-align: right; }
-    th:nth-child(2), th:nth-child(3) { text-align: right; }
 
-    /* ── Impact 4-col row ─────────────────────────────── */
-    .impact-row {
-      grid-template-columns: 2fr 1fr 1fr auto !important;
+    /* ── Convert tab ── */
+    .convert-display {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 28px 0;
+    }
+    .convert-pct {
+      font-size: 4rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .convert-letter {
+      font-size: 2.2rem; font-weight: 800;
+    }
+    .convert-points {
+      font-size: 1.1rem; color: var(--muted);
+    }
+    input[type="range"] {
+      width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer;
+    }
+    .scale-table td:first-child { color: var(--muted); }
+    .scale-table td:last-child { font-weight: 700; }
+    .scale-active { background: rgba(108,99,255,.15) !important; }
+    .scale-active td { color: var(--accent2) !important; }
+
+    /* ── Target tab ── */
+    .target-summary {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px;
+    }
+    .target-stat {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .target-stat .ts-val { font-size: 1.6rem; font-weight: 800; color: var(--accent2); }
+    .target-stat .ts-lbl { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+
+    /* ── History / Chart ── */
+    .chart-wrap {
+      display: flex; align-items: flex-end; gap: 10px;
+      height: 180px; padding: 0 4px; margin-top: 12px;
+    }
+    .bar-col {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; height: 100%; justify-content: flex-end; gap: 5px;
+    }
+    .bar {
+      width: 100%; border-radius: 6px 6px 0 0;
+      transition: height .5s cubic-bezier(.34,1.56,.64,1);
+      min-height: 4px;
+    }
+    .bar-val { font-size: .72rem; font-weight: 700; color: var(--accent2); }
+    .bar-lbl { font-size: .7rem; color: var(--muted); text-align: center; max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chart-axis {
+      display: flex; justify-content: space-between;
+      font-size: .7rem; color: var(--muted); margin-top: 4px; padding: 0 4px;
     }
 
-    /* ── Responsive ───────────────────────────────────── */
-    @media (max-width: 500px) {
+    /* ── Confetti canvas ── */
+    #confetti-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999;
+    }
+
+    /* ── Saved indicator ── */
+    .saved-dot {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--green);
+      margin-left: 6px; opacity: 0; transition: opacity .3s;
+    }
+    .saved-dot.show { opacity: 1; }
+
+    /* ── Attendance ── */
+    .att-input-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 8px; align-items: center; animation: fadeIn .2s ease;
+    }
+    .att-course-card {
+      background: var(--bg); border-radius: 10px; border: 1px solid var(--border);
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .att-course-header { display: flex; justify-content: space-between; align-items: center; }
+    .att-course-name   { font-weight: 700; font-size: .95rem; }
+    .att-pct-badge {
+      font-size: .8rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 50px;
+    }
+    .att-bar-track {
+      height: 8px; background: var(--border); border-radius: 50px; overflow: hidden;
+    }
+    .att-bar-fill { height: 100%; border-radius: 50px; transition: width .6s cubic-bezier(.34,1.56,.64,1); }
+    .att-info { font-size: .8rem; color: var(--muted); }
+
+    /* ── Pomodoro ── */
+    .pomo-mode-btn {
+      padding: 7px 16px; border-radius: 50px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-size: .83rem;
+      font-weight: 600; cursor: pointer; transition: all .2s;
+    }
+    .pomo-mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pomo-log-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: var(--bg); border-radius: 8px;
+      font-size: .83rem; animation: fadeIn .2s ease;
+    }
+    .pomo-log-time { color: var(--muted); font-size: .75rem; }
+
+    /* ── Profile Card ── */
+    #profile-card {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 60%, #1a1030 100%);
+      border: 1px solid #3a3560;
+      border-radius: 20px; padding: 28px; position: relative;
+      overflow: hidden; width: 100%; max-width: 480px;
+      margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      transition: transform .3s;
+    }
+    #profile-card:hover { transform: translateY(-4px); }
+    .pc-glow {
+      position: absolute; top: -60px; right: -60px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,99,255,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .pc-top { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; position: relative; }
+    .pc-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 800; color: #fff; flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(108,99,255,.4);
+    }
+    .pc-name  { font-size: 1.15rem; font-weight: 800; color: #fff; }
+    .pc-uni   { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .pc-major { font-size: .78rem; color: var(--accent2); margin-top: 2px; }
+    .pc-divider { height: 1px; background: var(--border); margin-bottom: 18px; }
+    .pc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
+    .pc-stat { text-align: center; }
+    .pc-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--accent2); }
+    .pc-stat-lbl { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+    .pc-bar-wrap { margin-bottom: 16px; }
+    .pc-bar-track { height: 6px; background: var(--border); border-radius: 50px; overflow: hidden; margin-bottom: 5px; }
+    .pc-bar-fill  { height: 100%; border-radius: 50px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .5s; }
+    .pc-bar-label { font-size: .72rem; color: var(--muted); }
+    .pc-badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px; }
+    .pc-badge {
+      font-size: .72rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 50px;
+    }
+    .pc-footer { font-size: .68rem; color: #3a3560; text-align: right; letter-spacing: .05em; }
+
+    @media (max-width: 520px) {
       header h1 { font-size: 1.7rem; }
-      .tabs { flex-direction: row; }
-      .tab-btn { padding: 9px 18px; font-size: 0.88rem; }
+      .tab-btn { padding: 8px 14px; font-size: .82rem; }
+      .target-summary { grid-template-columns: 1fr; }
+      .pc-stats { grid-template-columns: repeat(3,1fr); }
     }
   </style>
 </head>
 <body>
 
+<canvas id="confetti-canvas"></canvas>
+
 <header>
-  <h1>GPA Counter</h1>
-  <p>Calculate your SPA and GPA quickly and accurately</p>
+  <h1>UniKit</h1>
+  <p>Your ultimate university toolkit — GPA, Attendance, Timer & more</p>
 </header>
 
-<!-- Tab switcher -->
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('spa', this)">SPA</button>
-  <button class="tab-btn" onclick="switchTab('gpa', this)">GPA</button>
-  <button class="tab-btn" onclick="switchTab('impact', this)">Impact</button>
+  <button class="tab-btn active" onclick="switchTab('spa',this)">SPA</button>
+  <button class="tab-btn" onclick="switchTab('gpa',this)">GPA</button>
+  <button class="tab-btn" onclick="switchTab('impact',this)">Impact</button>
+  <button class="tab-btn" onclick="switchTab('target',this)">Target</button>
+  <button class="tab-btn" onclick="switchTab('convert',this)">Convert</button>
+  <button class="tab-btn" onclick="switchTab('history',this)">History</button>
+  <button class="tab-btn" onclick="switchTab('attendance',this)">Attendance</button>
+  <button class="tab-btn" onclick="switchTab('pomodoro',this)">Pomodoro</button>
+  <button class="tab-btn" onclick="switchTab('profile',this)">Profile Card</button>
 </div>
 
-<!-- ═══════════════════════════════════ SPA PANEL ═══════════════════════════ -->
+<!-- ══════════════════════════ SPA ══════════════════════════ -->
 <div class="panel active" id="panel-spa">
-
   <div class="card">
-    <h2>Courses</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:8px;">
-      <span style="font-size:.8rem;color:var(--muted);">Credits</span>
-      <span style="font-size:.8rem;color:var(--muted);">Grade Points (0–4)</span>
+    <h2>Courses <span class="saved-dot" id="spa-saved"></span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:9px;margin-bottom:8px">
+      <span style="font-size:.78rem;color:var(--muted)">Credits</span>
+      <span style="font-size:.78rem;color:var(--muted)">Grade Points (0–4)</span>
       <span></span>
     </div>
     <div class="courses-list" id="spa-courses"></div>
     <button class="add-btn" onclick="addCourse('spa')">+ Add course</button>
     <p class="error-msg" id="spa-error"></p>
   </div>
-
   <button class="calc-btn" onclick="calculateSPA()">Calculate SPA</button>
-
   <div class="result-box" id="spa-result">
+    <button class="copy-btn" onclick="copyResult('spa-value','SPA')">Copy</button>
     <div class="result-label">Your SPA</div>
     <div class="result-value" id="spa-value">—</div>
     <span class="result-grade" id="spa-badge"></span>
     <div class="breakdown" id="spa-breakdown"></div>
   </div>
-
   <button class="reset-btn" onclick="resetSPA()">Reset</button>
 </div>
 
-<!-- ═══════════════════════════════════ GPA PANEL ═══════════════════════════ -->
+<!-- ══════════════════════════ GPA ══════════════════════════ -->
 <div class="panel" id="panel-gpa">
-
   <div class="card">
-    <h2>Semesters</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:8px;">
-      <span style="font-size:.8rem;color:var(--muted);">Total Credits</span>
-      <span style="font-size:.8rem;color:var(--muted);">SPA (0–4)</span>
+    <h2>Semesters <span class="saved-dot" id="gpa-saved"></span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:9px;margin-bottom:8px">
+      <span style="font-size:.78rem;color:var(--muted)">Total Credits</span>
+      <span style="font-size:.78rem;color:var(--muted)">SPA (0–4)</span>
       <span></span>
     </div>
     <div class="courses-list" id="gpa-semesters"></div>
     <button class="add-btn" onclick="addCourse('gpa')">+ Add semester</button>
     <p class="error-msg" id="gpa-error"></p>
   </div>
-
   <button class="calc-btn" onclick="calculateGPA()">Calculate GPA</button>
-
   <div class="result-box" id="gpa-result">
+    <button class="copy-btn" onclick="copyResult('gpa-value','GPA')">Copy</button>
     <div class="result-label">Your GPA</div>
     <div class="result-value" id="gpa-value">—</div>
     <span class="result-grade" id="gpa-badge"></span>
     <div class="breakdown" id="gpa-breakdown"></div>
   </div>
-
   <button class="reset-btn" onclick="resetGPA()">Reset</button>
 </div>
 
-<!-- ════════════════════════════════ IMPACT PANEL ══════════════════════════ -->
+<!-- ══════════════════════════ IMPACT ══════════════════════════ -->
 <div class="panel" id="panel-impact">
-
   <div class="card">
     <h2>Your Current Standing</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div>
-        <label for="imp-cur-gpa">Current GPA (0–4)</label>
+        <label>Current GPA (0–4)</label>
         <input type="number" id="imp-cur-gpa" placeholder="e.g. 3.20" min="0" max="4" step="0.01" />
       </div>
       <div>
-        <label for="imp-cur-cr">Total credits earned</label>
+        <label>Total credits earned</label>
         <input type="number" id="imp-cur-cr" placeholder="e.g. 90" min="0" step="1" />
       </div>
     </div>
   </div>
-
   <div class="card">
-    <h2>Future / Current Semester Courses</h2>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:8px;">
-      <span style="font-size:.8rem;color:var(--muted);">Course name</span>
-      <span style="font-size:.8rem;color:var(--muted);">Credits</span>
-      <span style="font-size:.8rem;color:var(--muted);">Points (0–4)</span>
+    <h2>Future Courses</h2>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:9px;margin-bottom:8px">
+      <span style="font-size:.78rem;color:var(--muted)">Name</span>
+      <span style="font-size:.78rem;color:var(--muted)">Credits</span>
+      <span style="font-size:.78rem;color:var(--muted)">Points</span>
       <span></span>
     </div>
     <div class="courses-list" id="impact-courses"></div>
     <button class="add-btn" onclick="addImpactCourse()">+ Add course</button>
     <p class="error-msg" id="impact-error"></p>
   </div>
-
   <button class="calc-btn" onclick="calculateImpact()">Calculate Impact</button>
-
   <div class="result-box" id="impact-result">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
-      <div>
-        <div class="result-label">Current GPA</div>
-        <div style="font-size:1.8rem;font-weight:800;color:var(--muted)" id="impact-cur-display">—</div>
-      </div>
-      <div>
-        <div class="result-label">Projected GPA</div>
-        <div style="font-size:1.8rem;font-weight:800" id="impact-proj-display">—</div>
-      </div>
-      <div>
-        <div class="result-label">Change</div>
-        <div style="font-size:1.8rem;font-weight:800" id="impact-delta-display">—</div>
-      </div>
+    <button class="copy-btn" onclick="copyResult('impact-proj-display','Projected GPA')">Copy</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+      <div><div class="result-label">Current GPA</div><div style="font-size:1.7rem;font-weight:800;color:var(--muted)" id="impact-cur-display">—</div></div>
+      <div><div class="result-label">Projected GPA</div><div style="font-size:1.7rem;font-weight:800" id="impact-proj-display">—</div></div>
+      <div><div class="result-label">Change</div><div style="font-size:1.7rem;font-weight:800" id="impact-delta-display">—</div></div>
     </div>
     <span class="result-grade" id="impact-badge"></span>
     <div class="breakdown" id="impact-breakdown"></div>
   </div>
-
   <button class="reset-btn" onclick="resetImpact()">Reset</button>
 </div>
 
+<!-- ══════════════════════════ TARGET ══════════════════════════ -->
+<div class="panel" id="panel-target">
+  <div class="card">
+    <h2>Where you are now</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div><label>Current GPA</label><input type="number" id="tgt-cur-gpa" placeholder="e.g. 3.10" min="0" max="4" step="0.01" oninput="calculateTarget()" /></div>
+      <div><label>Credits earned</label><input type="number" id="tgt-cur-cr" placeholder="e.g. 90" min="0" step="1" oninput="calculateTarget()" /></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Your goal</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div><label>Target GPA</label><input type="number" id="tgt-goal" placeholder="e.g. 3.50" min="0" max="4" step="0.01" oninput="calculateTarget()" /></div>
+      <div><label>Next semester credits</label><input type="number" id="tgt-next-cr" placeholder="e.g. 30" min="0" step="1" oninput="calculateTarget()" /></div>
+    </div>
+  </div>
+  <div class="result-box" id="target-result" style="display:none">
+    <div class="target-summary">
+      <div class="target-stat"><div class="ts-val" id="tgt-needed-spa">—</div><div class="ts-lbl">SPA needed next semester</div></div>
+      <div class="target-stat"><div class="ts-val" id="tgt-new-gpa">—</div><div class="ts-lbl">GPA after next semester</div></div>
+    </div>
+    <p id="tgt-message" style="color:var(--muted);font-size:.88rem;margin-top:10px;line-height:1.5"></p>
+  </div>
+  <p class="error-msg" id="target-error"></p>
+</div>
+
+<!-- ══════════════════════════ CONVERT ══════════════════════════ -->
+<div class="panel" id="panel-convert">
+  <div class="card">
+    <h2>Grade Converter — MES Kazakhstan</h2>
+    <label>Enter your grade in percent</label>
+    <input type="range" id="conv-slider" min="0" max="100" value="85" oninput="updateConvert(this.value)" />
+    <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px"><span>0%</span><span>50%</span><span>100%</span></div>
+    <div style="margin-top:10px">
+      <input type="number" id="conv-input" placeholder="Or type a number 0–100" min="0" max="100" step="1" oninput="syncConvert(this.value)" />
+    </div>
+    <div class="convert-display">
+      <div class="convert-pct" id="conv-pct">85%</div>
+      <div class="convert-letter" id="conv-letter" style="color:#84cc16">B+</div>
+      <div class="convert-points" id="conv-pts">3.33 points</div>
+      <span class="result-grade" id="conv-badge"></span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Full Grade Scale</h2>
+    <table class="scale-table" id="scale-table">
+      <thead><tr><th>Percent</th><th>Letter</th><th>Points</th><th>Level</th></tr></thead>
+      <tbody>
+        <tr data-min="95" data-max="100"><td>95–100%</td><td>A</td><td>4.00</td><td>Excellent</td></tr>
+        <tr data-min="90" data-max="94"><td>90–94%</td><td>A-</td><td>3.67</td><td>Excellent</td></tr>
+        <tr data-min="85" data-max="89"><td>85–89%</td><td>B+</td><td>3.33</td><td>Good</td></tr>
+        <tr data-min="80" data-max="84"><td>80–84%</td><td>B</td><td>3.00</td><td>Good</td></tr>
+        <tr data-min="75" data-max="79"><td>75–79%</td><td>B-</td><td>2.67</td><td>Good</td></tr>
+        <tr data-min="70" data-max="74"><td>70–74%</td><td>C+</td><td>2.33</td><td>Satisfactory</td></tr>
+        <tr data-min="65" data-max="69"><td>65–69%</td><td>C</td><td>2.00</td><td>Satisfactory</td></tr>
+        <tr data-min="60" data-max="64"><td>60–64%</td><td>C-</td><td>1.67</td><td>Satisfactory</td></tr>
+        <tr data-min="55" data-max="59"><td>55–59%</td><td>D+</td><td>1.33</td><td>Pass</td></tr>
+        <tr data-min="50" data-max="54"><td>50–54%</td><td>D</td><td>1.00</td><td>Pass</td></tr>
+        <tr data-min="25" data-max="49"><td>25–49%</td><td>FX</td><td>0.00</td><td>Unsatisfactory</td></tr>
+        <tr data-min="0"  data-max="24"><td>0–24%</td><td>F</td><td>0.00</td><td>Unsatisfactory</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════ HISTORY ══════════════════════════ -->
+<div class="panel" id="panel-history">
+  <div class="card">
+    <h2>Semester History</h2>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:9px;margin-bottom:8px">
+      <span style="font-size:.78rem;color:var(--muted)">Semester name</span>
+      <span style="font-size:.78rem;color:var(--muted)">Credits</span>
+      <span style="font-size:.78rem;color:var(--muted)">SPA</span>
+      <span></span>
+    </div>
+    <div class="courses-list" id="hist-rows"></div>
+    <button class="add-btn" onclick="addHistRow()">+ Add semester</button>
+    <p class="error-msg" id="hist-error"></p>
+  </div>
+  <button class="calc-btn" onclick="renderHistory()">Show Chart</button>
+  <div class="result-box" id="hist-result">
+    <div class="result-label">Cumulative GPA over time</div>
+    <div class="result-value" id="hist-gpa-val">—</div>
+    <span class="result-grade" id="hist-badge"></span>
+    <div class="chart-wrap" id="hist-chart"></div>
+    <div class="chart-axis"><span>Semester 1</span><span id="hist-axis-end"></span></div>
+    <div class="breakdown" id="hist-breakdown"></div>
+  </div>
+  <button class="reset-btn" onclick="resetHistory()">Reset</button>
+</div>
+
+<!-- ══════════════════════════ ATTENDANCE ══════════════════════════ -->
+<div class="panel" id="panel-attendance">
+
+  <div class="card">
+    <h2>Courses <small style="font-weight:400;color:var(--muted);font-size:.72rem;text-transform:none;letter-spacing:0">Absence limit: 30%</small></h2>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:8px">
+      <span style="font-size:.75rem;color:var(--muted)">Course name</span>
+      <span style="font-size:.75rem;color:var(--muted)">Total hours</span>
+      <span style="font-size:.75rem;color:var(--muted)">Absence %</span>
+      <span></span>
+    </div>
+    <div class="courses-list" id="att-rows"></div>
+    <button class="add-btn" onclick="addAttRow()">+ Add course</button>
+    <p class="error-msg" id="attendance-error"></p>
+  </div>
+
+  <button class="calc-btn" onclick="calcAttendance()">Check Attendance</button>
+
+  <div class="result-box" id="att-result">
+    <div id="att-cards" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAttendance()">Reset</button>
+</div>
+
+<!-- ══════════════════════════ POMODORO ══════════════════════════ -->
+<div class="panel" id="panel-pomodoro">
+  <div class="card" style="text-align:center">
+    <h2>Pomodoro Timer</h2>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px">
+      <button class="pomo-mode-btn active" id="pomo-btn-work"       onclick="setPomoMode('work',this)">Work 25m</button>
+      <button class="pomo-mode-btn"        id="pomo-btn-short"      onclick="setPomoMode('short',this)">Break 5m</button>
+      <button class="pomo-mode-btn"        id="pomo-btn-long"       onclick="setPomoMode('long',this)">Long 15m</button>
+    </div>
+
+    <!-- SVG circle timer -->
+    <div style="position:relative;display:inline-block;margin-bottom:20px">
+      <svg width="220" height="220" style="transform:rotate(-90deg)">
+        <circle cx="110" cy="110" r="96" fill="none" stroke="var(--border)" stroke-width="10"/>
+        <circle id="pomo-ring" cx="110" cy="110" r="96" fill="none"
+          stroke="var(--accent)" stroke-width="10"
+          stroke-dasharray="603" stroke-dashoffset="0"
+          stroke-linecap="round" style="transition:stroke-dashoffset .9s linear,stroke .3s"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div id="pomo-time" style="font-size:3rem;font-weight:900;letter-spacing:.02em">25:00</div>
+        <div id="pomo-label" style="font-size:.8rem;color:var(--muted);margin-top:2px">Focus time</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
+      <button class="calc-btn" id="pomo-start-btn" onclick="togglePomo()" style="width:120px;padding:11px">Start</button>
+      <button class="reset-btn" onclick="resetPomo()" style="width:80px;padding:11px">Reset</button>
+    </div>
+
+    <div style="display:flex;gap:24px;justify-content:center">
+      <div style="text-align:center">
+        <div id="pomo-sessions" style="font-size:1.6rem;font-weight:800;color:var(--accent2)">0</div>
+        <div style="font-size:.75rem;color:var(--muted)">Sessions done</div>
+      </div>
+      <div style="text-align:center">
+        <div id="pomo-total-min" style="font-size:1.6rem;font-weight:800;color:var(--accent2)">0</div>
+        <div style="font-size:.75rem;color:var(--muted)">Minutes focused</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <label style="font-size:.8rem">Session note (optional)</label>
+      <input type="text" id="pomo-note" placeholder="e.g. Math homework, Chapter 3..." style="margin-top:6px" />
+    </div>
+  </div>
+
+  <!-- Session log -->
+  <div class="card">
+    <h2>Session Log</h2>
+    <div id="pomo-log" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto">
+      <p style="color:var(--muted);font-size:.85rem">No sessions yet. Complete a pomodoro to log it here.</p>
+    </div>
+    <button class="reset-btn" onclick="clearPomoLog()" style="margin-top:12px">Clear log</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ PROFILE CARD ══════════════════════════ -->
+<div class="panel" id="panel-profile">
+  <div class="card">
+    <h2>Your Info</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="grid-column:1/-1">
+        <label>Full name</label>
+        <input type="text" id="prof-name" placeholder="e.g. Daulet Keldi" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>University</label>
+        <input type="text" id="prof-uni" placeholder="e.g. Nazarbayev University" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>Major / Faculty</label>
+        <input type="text" id="prof-major" placeholder="e.g. Computer Science" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>Current GPA (0–4)</label>
+        <input type="number" id="prof-gpa" placeholder="e.g. 3.67" min="0" max="4" step="0.01" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>Semester / Year</label>
+        <input type="text" id="prof-sem" placeholder="e.g. Semester 4" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>Credits earned</label>
+        <input type="number" id="prof-cr" placeholder="e.g. 120" min="0" oninput="renderCard()" />
+      </div>
+      <div>
+        <label>Total credits (graduation)</label>
+        <input type="number" id="prof-total-cr" placeholder="e.g. 240" min="0" oninput="renderCard()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Live card preview -->
+  <div id="profile-card-wrap" style="perspective:800px">
+    <div id="profile-card">
+      <div class="pc-glow"></div>
+      <div class="pc-top">
+        <div class="pc-avatar" id="pc-avatar">?</div>
+        <div>
+          <div class="pc-name"  id="pc-name">Your Name</div>
+          <div class="pc-uni"   id="pc-uni">University</div>
+          <div class="pc-major" id="pc-major">Major</div>
+        </div>
+      </div>
+      <div class="pc-divider"></div>
+      <div class="pc-stats">
+        <div class="pc-stat">
+          <div class="pc-stat-val" id="pc-gpa">—</div>
+          <div class="pc-stat-lbl">GPA</div>
+        </div>
+        <div class="pc-stat">
+          <div class="pc-stat-val" id="pc-sem">—</div>
+          <div class="pc-stat-lbl">Semester</div>
+        </div>
+        <div class="pc-stat">
+          <div class="pc-stat-val" id="pc-cr-pct">—</div>
+          <div class="pc-stat-lbl">Credits</div>
+        </div>
+      </div>
+      <div class="pc-bar-wrap">
+        <div class="pc-bar-track"><div class="pc-bar-fill" id="pc-bar-fill"></div></div>
+        <div class="pc-bar-label" id="pc-bar-label">Progress to graduation</div>
+      </div>
+      <div class="pc-badge-row" id="pc-badge-row"></div>
+      <div class="pc-footer">UniKit · Academic Profile</div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="downloadCard()">Download Card as PNG</button>
+</div>
+
 <script>
-  // ── Tab switching ──────────────────────────────────────────────────────────
-  function switchTab(tab, btn) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-' + tab).classList.add('active');
-    btn.classList.add('active');
-  }
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
 
-  // ── Row factory ────────────────────────────────────────────────────────────
-  let spaCount = 0, gpaCount = 0;
+function gradeLabel(val) {
+  if (val >= 4.00) return ['A — Excellent',      '#22c55e'];
+  if (val >= 3.67) return ['A- — Excellent',     '#22c55e'];
+  if (val >= 3.33) return ['B+ — Good',          '#84cc16'];
+  if (val >= 3.00) return ['B — Good',           '#84cc16'];
+  if (val >= 2.67) return ['B- — Good',          '#84cc16'];
+  if (val >= 2.33) return ['C+ — Satisfactory',  '#eab308'];
+  if (val >= 2.00) return ['C — Satisfactory',   '#eab308'];
+  if (val >= 1.67) return ['C- — Satisfactory',  '#eab308'];
+  if (val >= 1.33) return ['D+ — Pass',          '#f97316'];
+  if (val >= 1.00) return ['D — Pass',           '#f97316'];
+  return                  ['F — Unsatisfactory', '#ef4444'];
+}
 
-  function addCourse(type) {
-    const list = document.getElementById(type === 'spa' ? 'spa-courses' : 'gpa-semesters');
-    const id   = type === 'spa' ? ++spaCount : ++gpaCount;
+function pctToGrade(pct) {
+  if (pct >= 95) return { letter:'A',   pts:4.00, level:'Excellent' };
+  if (pct >= 90) return { letter:'A-',  pts:3.67, level:'Excellent' };
+  if (pct >= 85) return { letter:'B+',  pts:3.33, level:'Good' };
+  if (pct >= 80) return { letter:'B',   pts:3.00, level:'Good' };
+  if (pct >= 75) return { letter:'B-',  pts:2.67, level:'Good' };
+  if (pct >= 70) return { letter:'C+',  pts:2.33, level:'Satisfactory' };
+  if (pct >= 65) return { letter:'C',   pts:2.00, level:'Satisfactory' };
+  if (pct >= 60) return { letter:'C-',  pts:1.67, level:'Satisfactory' };
+  if (pct >= 55) return { letter:'D+',  pts:1.33, level:'Pass' };
+  if (pct >= 50) return { letter:'D',   pts:1.00, level:'Pass' };
+  if (pct >= 25) return { letter:'FX',  pts:0.00, level:'Unsatisfactory' };
+  return               { letter:'F',   pts:0.00, level:'Unsatisfactory' };
+}
 
-    const row = document.createElement('div');
-    row.className = 'course-row';
-    row.id = `${type}-row-${id}`;
+function setBadge(el, val) {
+  const [label, color] = gradeLabel(val);
+  el.textContent = label;
+  el.style.background = color + '22';
+  el.style.color = color;
+  el.style.border = `1px solid ${color}55`;
+}
 
-    const ph1 = type === 'spa' ? 'e.g. 5'    : 'e.g. 120';
-    const ph2 = type === 'spa' ? 'e.g. 3.67' : 'e.g. 3.50';
+function showError(type, msg) {
+  const el = document.getElementById(type + '-error');
+  el.textContent = msg; el.classList.add('show');
+}
+function hideError(type) {
+  document.getElementById(type + '-error').classList.remove('show');
+}
 
-    row.innerHTML = `
-      <input type="number" id="${type}-c-${id}" placeholder="${ph1}" min="0" step="0.5" />
-      <input type="number" id="${type}-g-${id}" placeholder="${ph2}" min="0" step="0.01" />
-      <button class="remove-btn" onclick="removeRow('${type}-row-${id}')" title="Remove">×</button>
-    `;
-    list.appendChild(row);
-    row.querySelector('input').focus();
-    hideError(type);
-  }
+function animateValue(el, target) {
+  const start = parseFloat(el.textContent) || 0;
+  const dur = 600, step = 16;
+  let t = 0;
+  const iv = setInterval(() => {
+    t += step;
+    const pct = Math.min(t / dur, 1);
+    const ease = 1 - Math.pow(1 - pct, 3);
+    el.textContent = (start + (target - start) * ease).toFixed(2);
+    if (pct >= 1) clearInterval(iv);
+  }, step);
+}
 
-  function removeRow(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
+function copyResult(elId, label) {
+  const val = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(`${label}: ${val}`).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function showError(type, msg) {
-    const el = document.getElementById(type + '-error');
-    el.textContent = msg;
-    el.classList.add('show');
-  }
-  function hideError(type) {
-    document.getElementById(type + '-error').classList.remove('show');
-  }
+function flashSaved(type) {
+  const dot = document.getElementById(type + '-saved');
+  if (!dot) return;
+  dot.classList.add('show');
+  setTimeout(() => dot.classList.remove('show'), 1800);
+}
 
-  function gradeLabel(val) {
-    // val is on 4.0 scale
-    if (val >= 4.00) return ['A — Excellent',       '#22c55e'];
-    if (val >= 3.67) return ['A- — Excellent',      '#22c55e'];
-    if (val >= 3.33) return ['B+ — Good',           '#84cc16'];
-    if (val >= 3.00) return ['B — Good',            '#84cc16'];
-    if (val >= 2.67) return ['B- — Good',           '#84cc16'];
-    if (val >= 2.33) return ['C+ — Satisfactory',   '#eab308'];
-    if (val >= 2.00) return ['C — Satisfactory',    '#eab308'];
-    if (val >= 1.67) return ['C- — Satisfactory',   '#eab308'];
-    if (val >= 1.33) return ['D+ — Pass',           '#f97316'];
-    if (val >= 1.00) return ['D — Pass',            '#f97316'];
-    return                  ['F — Unsatisfactory',  '#ef4444'];
-  }
-
-  function showResult(type, value, rows) {
-    const box   = document.getElementById(type + '-result');
-    const valEl = document.getElementById(type + '-value');
-    const badge = document.getElementById(type + '-badge');
-    const bkEl  = document.getElementById(type + '-breakdown');
-
-    valEl.textContent = value.toFixed(2);
-    box.classList.add('show');
-
-    const [label, color] = gradeLabel(value);
-    badge.textContent = label;
-    badge.style.background = color + '22';
-    badge.style.color       = color;
-    badge.style.border      = `1px solid ${color}55`;
-
-    // Breakdown table
-    const header = type === 'spa'
-      ? '<th>#</th><th style="text-align:right">Credits</th><th style="text-align:right">Grade</th>'
-      : '<th>Semester</th><th style="text-align:right">Credits</th><th style="text-align:right">SPA</th>';
-
-    bkEl.innerHTML = `
-      <div class="breakdown-title">Breakdown</div>
-      <table>
-        <thead><tr>${header}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
-  }
-
-  // ── SPA ────────────────────────────────────────────────────────────────────
-  function calculateSPA() {
-    hideError('spa');
-    document.getElementById('spa-result').classList.remove('show');
-
-    const rows = document.querySelectorAll('#spa-courses .course-row');
-    if (rows.length === 0) { showError('spa', 'Add at least one course.'); return; }
-
-    let totalCredits = 0, weighted = 0, tableRows = '';
-    for (let i = 0; i < rows.length; i++) {
-      const id  = rows[i].id.replace('spa-row-', '');
-      const cr  = parseFloat(document.getElementById(`spa-c-${id}`).value);
-      const gr  = parseFloat(document.getElementById(`spa-g-${id}`).value);
-      if (isNaN(cr) || isNaN(gr) || cr <= 0 || gr < 0 || gr > 4) {
-        showError('spa', `Row ${i+1}: credits must be > 0 and grade points 0–4 (e.g. 3.67).`); return;
-      }
-      totalCredits += cr;
-      weighted     += cr * gr;
-      tableRows    += `<tr><td>${i+1}</td><td>${cr}</td><td>${gr.toFixed(2)}</td></tr>`;
-    }
-
-    showResult('spa', weighted / totalCredits, tableRows);
-    document.getElementById('spa-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  function resetSPA() {
-    document.getElementById('spa-courses').innerHTML = '';
-    document.getElementById('spa-result').classList.remove('show');
-    hideError('spa');
-    spaCount = 0;
-  }
-
-  // ── GPA ────────────────────────────────────────────────────────────────────
-  function calculateGPA() {
-    hideError('gpa');
-    document.getElementById('gpa-result').classList.remove('show');
-
-    const rows = document.querySelectorAll('#gpa-semesters .course-row');
-    if (rows.length === 0) { showError('gpa', 'Add at least one semester.'); return; }
-
-    let totalCr = 0, weighted = 0, tableRows = '';
-    for (let i = 0; i < rows.length; i++) {
-      const id  = rows[i].id.replace('gpa-row-', '');
-      const cr  = parseFloat(document.getElementById(`gpa-c-${id}`).value);
-      const spa = parseFloat(document.getElementById(`gpa-g-${id}`).value);
-      if (isNaN(cr) || isNaN(spa) || cr <= 0 || spa < 0 || spa > 4) {
-        showError('gpa', `Semester ${i+1}: enter valid credits (>0) and SPA (0–4).`); return;
-      }
-      totalCr  += cr;
-      weighted += cr * spa;
-      tableRows += `<tr><td>Semester ${i+1}</td><td>${cr}</td><td>${spa.toFixed(2)}</td></tr>`;
-    }
-
-    showResult('gpa', weighted / totalCr, tableRows);
-    document.getElementById('gpa-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  function resetGPA() {
-    document.getElementById('gpa-semesters').innerHTML = '';
-    document.getElementById('gpa-result').classList.remove('show');
-    hideError('gpa');
-    gpaCount = 0;
-  }
-
-  // ── IMPACT ────────────────────────────────────────────────────────────────
-  let impCount = 0;
-
-  function addImpactCourse() {
-    const list = document.getElementById('impact-courses');
-    const id   = ++impCount;
-    const row  = document.createElement('div');
-    row.className = 'course-row impact-row';
-    row.id = `imp-row-${id}`;
-    row.innerHTML = `
-      <input type="text"   id="imp-name-${id}" placeholder="e.g. Math"  />
-      <input type="number" id="imp-cr-${id}"   placeholder="Credits"  min="0" step="0.5" />
-      <input type="number" id="imp-gr-${id}"   placeholder="0–4"      min="0" max="4" step="0.01" />
-      <button class="remove-btn" onclick="removeRow('imp-row-${id}')" title="Remove">×</button>
-    `;
-    list.appendChild(row);
-    row.querySelector('input').focus();
-    hideError('impact');
-  }
-
-  function calculateImpact() {
-    hideError('impact');
-    document.getElementById('impact-result').classList.remove('show');
-
-    const curGPA = parseFloat(document.getElementById('imp-cur-gpa').value);
-    const curCr  = parseFloat(document.getElementById('imp-cur-cr').value);
-
-    if (isNaN(curGPA) || curGPA < 0 || curGPA > 4) { showError('impact', 'Enter your current GPA (0–4).'); return; }
-    if (isNaN(curCr)  || curCr  < 0)                { showError('impact', 'Enter your total earned credits.'); return; }
-
-    const rows = document.querySelectorAll('#impact-courses .impact-row');
-    if (rows.length === 0) { showError('impact', 'Add at least one future course.'); return; }
-
-    const courses = [];
-    for (let i = 0; i < rows.length; i++) {
-      const id   = rows[i].id.replace('imp-row-', '');
-      const name = document.getElementById(`imp-name-${id}`).value.trim() || `Course ${i+1}`;
-      const cr   = parseFloat(document.getElementById(`imp-cr-${id}`).value);
-      const gr   = parseFloat(document.getElementById(`imp-gr-${id}`).value);
-      if (isNaN(cr) || cr <= 0 || isNaN(gr) || gr < 0 || gr > 4) {
-        showError('impact', `"${name}": enter valid credits (>0) and grade points (0–4).`); return;
-      }
-      courses.push({ name, cr, gr });
-    }
-
-    // Base weighted points
-    const basePoints = curGPA * curCr;
-
-    // Projected GPA with ALL new courses
-    const newTotalCr  = curCr  + courses.reduce((s, c) => s + c.cr, 0);
-    const newPoints   = basePoints + courses.reduce((s, c) => s + c.cr * c.gr, 0);
-    const projectedGPA = newPoints / newTotalCr;
-
-    // Per-course impact
-    let tableRows = '';
-    courses.forEach(c => {
-      // GPA if only this course were added
-      const singleGPA   = (basePoints + c.cr * c.gr) / (curCr + c.cr);
-      const delta       = singleGPA - curGPA;
-      const sign        = delta >= 0 ? '+' : '';
-      const deltaColor  = delta > 0.005 ? '#22c55e' : delta < -0.005 ? '#ef4444' : '#8892b0';
-      const [glabel]    = gradeLabel(c.gr);
-      tableRows += `
-        <tr>
-          <td>${c.name}</td>
-          <td style="text-align:right">${c.cr}</td>
-          <td style="text-align:right">${c.gr.toFixed(2)}<br><small style="color:var(--muted);font-weight:400">${glabel}</small></td>
-          <td style="text-align:right;color:${deltaColor};font-weight:700">${sign}${delta.toFixed(3)}</td>
-        </tr>`;
+// ═══════════════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════════════
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const pieces = Array.from({length:120}, () => ({
+    x: Math.random() * canvas.width, y: -10,
+    r: 4 + Math.random() * 6,
+    d: 2 + Math.random() * 4,
+    color: ['#6c63ff','#a78bfa','#22c55e','#eab308','#f97316','#38bdf8'][Math.floor(Math.random()*6)],
+    tilt: Math.random() * 10 - 5,
+    spin: (Math.random() - .5) * .3,
+  }));
+  let frame = 0;
+  const iv = setInterval(() => {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color; ctx.fill();
+      p.y += p.d; p.x += Math.sin(frame/20 + p.tilt) * 1.5;
+      p.tilt += p.spin;
     });
+    frame++;
+    if (frame > 120) { clearInterval(iv); ctx.clearRect(0,0,canvas.width,canvas.height); }
+  }, 16);
+}
 
-    const delta        = projectedGPA - curGPA;
-    const sign         = delta >= 0 ? '+' : '';
-    const deltaColor   = delta > 0.005 ? '#22c55e' : delta < -0.005 ? '#ef4444' : '#8892b0';
-    const [projLabel, projColor] = gradeLabel(projectedGPA);
+// ═══════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
 
-    document.getElementById('impact-cur-display').textContent  = curGPA.toFixed(2);
-    document.getElementById('impact-proj-display').textContent = projectedGPA.toFixed(2);
-    document.getElementById('impact-proj-display').style.color = projColor;
-    document.getElementById('impact-delta-display').textContent = `${sign}${delta.toFixed(3)}`;
-    document.getElementById('impact-delta-display').style.color = deltaColor;
-    document.getElementById('impact-badge').textContent         = projLabel;
-    document.getElementById('impact-badge').style.background    = projColor + '22';
-    document.getElementById('impact-badge').style.color         = projColor;
-    document.getElementById('impact-badge').style.border        = `1px solid ${projColor}55`;
+// ═══════════════════════════════════════════════════════════
+//  ROW FACTORIES
+// ═══════════════════════════════════════════════════════════
+let spaCount=0, gpaCount=0, impCount=0, histCount=0;
 
-    document.getElementById('impact-breakdown').innerHTML = `
-      <div class="breakdown-title">Per-course influence on GPA</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Course</th>
-            <th style="text-align:right">Cr</th>
-            <th style="text-align:right">Grade</th>
-            <th style="text-align:right">GPA shift</th>
-          </tr>
-        </thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-      <p style="font-size:.8rem;color:var(--muted);margin-top:12px">
-        "GPA shift" = how much your GPA would move if only that course were added to your record.
-      </p>`;
+function addCourse(type) {
+  const listId = type === 'spa' ? 'spa-courses' : 'gpa-semesters';
+  const id = type === 'spa' ? ++spaCount : ++gpaCount;
+  const row = document.createElement('div');
+  row.className = 'course-row'; row.id = `${type}-row-${id}`;
+  const ph1 = type==='spa' ? 'e.g. 5'   : 'e.g. 120';
+  const ph2 = type==='spa' ? 'e.g. 3.67': 'e.g. 3.50';
+  row.innerHTML = `
+    <input type="number" id="${type}-c-${id}" placeholder="${ph1}" min="0" step="0.5" />
+    <input type="number" id="${type}-g-${id}" placeholder="${ph2}" min="0" step="0.01" />
+    <button class="remove-btn" onclick="removeRow('${type}-row-${id}')">×</button>`;
+  document.getElementById(listId).appendChild(row);
+  row.querySelector('input').focus();
+  hideError(type);
+  saveData(type);
+}
 
-    document.getElementById('impact-result').classList.add('show');
-    document.getElementById('impact-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+function addImpactCourse() {
+  const id = ++impCount;
+  const row = document.createElement('div');
+  row.className = 'course-row wide'; row.id = `imp-row-${id}`;
+  row.innerHTML = `
+    <input type="text"   id="imp-name-${id}" placeholder="e.g. Math" />
+    <input type="number" id="imp-cr-${id}"   placeholder="Credits" min="0" step="0.5" />
+    <input type="number" id="imp-gr-${id}"   placeholder="0–4" min="0" max="4" step="0.01" />
+    <button class="remove-btn" onclick="removeRow('imp-row-${id}')">×</button>`;
+  document.getElementById('impact-courses').appendChild(row);
+  row.querySelector('input').focus(); hideError('impact');
+}
 
-  function resetImpact() {
-    document.getElementById('imp-cur-gpa').value = '';
-    document.getElementById('imp-cur-cr').value  = '';
-    document.getElementById('impact-courses').innerHTML = '';
-    document.getElementById('impact-result').classList.remove('show');
-    hideError('impact');
-    impCount = 0;
-  }
+function addHistRow() {
+  const id = ++histCount;
+  const row = document.createElement('div');
+  row.className = 'course-row wide'; row.id = `hist-row-${id}`;
+  const sem = `Semester ${histCount}`;
+  row.innerHTML = `
+    <input type="text"   id="hist-name-${id}" placeholder="${sem}" />
+    <input type="number" id="hist-cr-${id}"   placeholder="Credits" min="0" step="1" />
+    <input type="number" id="hist-spa-${id}"  placeholder="0–4" min="0" max="4" step="0.01" />
+    <button class="remove-btn" onclick="removeRow('hist-row-${id}')">×</button>`;
+  document.getElementById('hist-rows').appendChild(row);
+  row.querySelector('input').focus(); hideError('hist');
+  saveData('hist');
+}
 
-  // ── Init with one empty row each ───────────────────────────────────────────
-  addCourse('spa');
-  addCourse('gpa');
+function removeRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LOCALSTORAGE
+// ═══════════════════════════════════════════════════════════
+function saveData(type) {
+  // debounce
+  clearTimeout(saveData._t);
+  saveData._t = setTimeout(() => {
+    if (type === 'spa') {
+      const rows = [...document.querySelectorAll('#spa-courses .course-row')].map(r => {
+        const id = r.id.replace('spa-row-','');
+        return { c: document.getElementById(`spa-c-${id}`)?.value, g: document.getElementById(`spa-g-${id}`)?.value };
+      });
+      localStorage.setItem('spa_rows', JSON.stringify(rows));
+      flashSaved('spa');
+    }
+    if (type === 'gpa') {
+      const rows = [...document.querySelectorAll('#gpa-semesters .course-row')].map(r => {
+        const id = r.id.replace('gpa-row-','');
+        return { c: document.getElementById(`gpa-c-${id}`)?.value, g: document.getElementById(`gpa-g-${id}`)?.value };
+      });
+      localStorage.setItem('gpa_rows', JSON.stringify(rows));
+      flashSaved('gpa');
+    }
+  }, 600);
+}
+
+function loadSaved() {
+  const spa = JSON.parse(localStorage.getItem('spa_rows') || '[]');
+  spa.forEach(d => { addCourse('spa'); const id = spaCount; document.getElementById(`spa-c-${id}`).value=d.c; document.getElementById(`spa-g-${id}`).value=d.g; });
+  if (!spa.length) addCourse('spa');
+
+  const gpa = JSON.parse(localStorage.getItem('gpa_rows') || '[]');
+  gpa.forEach(d => { addCourse('gpa'); const id = gpaCount; document.getElementById(`gpa-c-${id}`).value=d.c; document.getElementById(`gpa-g-${id}`).value=d.g; });
+  if (!gpa.length) addCourse('gpa');
+
   addImpactCourse();
+  addHistRow(); addHistRow();
+}
+
+// auto-save on input
+document.addEventListener('input', e => {
+  if (e.target.closest('#spa-courses'))   saveData('spa');
+  if (e.target.closest('#gpa-semesters')) saveData('gpa');
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SPA
+// ═══════════════════════════════════════════════════════════
+function calculateSPA() {
+  hideError('spa');
+  document.getElementById('spa-result').classList.remove('show');
+  const rows = document.querySelectorAll('#spa-courses .course-row');
+  if (!rows.length) { showError('spa','Add at least one course.'); return; }
+  let totalCr=0, weighted=0, tableRows='';
+  for (let i=0; i<rows.length; i++) {
+    const id = rows[i].id.replace('spa-row-','');
+    const cr = parseFloat(document.getElementById(`spa-c-${id}`).value);
+    const gr = parseFloat(document.getElementById(`spa-g-${id}`).value);
+    if (isNaN(cr)||isNaN(gr)||cr<=0||gr<0||gr>4) { showError('spa',`Row ${i+1}: credits >0, grade 0–4.`); return; }
+    totalCr += cr; weighted += cr*gr;
+    const [gl,gc] = gradeLabel(gr);
+    tableRows += `<tr><td>${i+1}</td><td style="text-align:right">${cr}</td><td style="text-align:right;color:${gc}">${gr.toFixed(2)}</td></tr>`;
+  }
+  const spa = weighted/totalCr;
+  document.getElementById('spa-result').classList.add('show');
+  animateValue(document.getElementById('spa-value'), spa);
+  setBadge(document.getElementById('spa-badge'), spa);
+  document.getElementById('spa-breakdown').innerHTML = `
+    <div class="breakdown-title">Breakdown</div>
+    <table><thead><tr><th>#</th><th style="text-align:right">Credits</th><th style="text-align:right">Points</th></tr></thead>
+    <tbody>${tableRows}</tbody></table>`;
+  document.getElementById('spa-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  if (spa >= 3.67) launchConfetti();
+}
+
+function resetSPA() {
+  document.getElementById('spa-courses').innerHTML='';
+  document.getElementById('spa-result').classList.remove('show');
+  hideError('spa'); spaCount=0;
+  localStorage.removeItem('spa_rows');
+  addCourse('spa');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GPA
+// ═══════════════════════════════════════════════════════════
+function calculateGPA() {
+  hideError('gpa');
+  document.getElementById('gpa-result').classList.remove('show');
+  const rows = document.querySelectorAll('#gpa-semesters .course-row');
+  if (!rows.length) { showError('gpa','Add at least one semester.'); return; }
+  let totalCr=0, weighted=0, tableRows='';
+  for (let i=0; i<rows.length; i++) {
+    const id = rows[i].id.replace('gpa-row-','');
+    const cr  = parseFloat(document.getElementById(`gpa-c-${id}`).value);
+    const spa = parseFloat(document.getElementById(`gpa-g-${id}`).value);
+    if (isNaN(cr)||isNaN(spa)||cr<=0||spa<0||spa>4) { showError('gpa',`Semester ${i+1}: credits >0, SPA 0–4.`); return; }
+    totalCr += cr; weighted += cr*spa;
+    const [gl,gc] = gradeLabel(spa);
+    tableRows += `<tr><td>Sem ${i+1}</td><td style="text-align:right">${cr}</td><td style="text-align:right;color:${gc}">${spa.toFixed(2)}</td></tr>`;
+  }
+  const gpa = weighted/totalCr;
+  document.getElementById('gpa-result').classList.add('show');
+  animateValue(document.getElementById('gpa-value'), gpa);
+  setBadge(document.getElementById('gpa-badge'), gpa);
+  document.getElementById('gpa-breakdown').innerHTML = `
+    <div class="breakdown-title">Breakdown</div>
+    <table><thead><tr><th>Semester</th><th style="text-align:right">Credits</th><th style="text-align:right">SPA</th></tr></thead>
+    <tbody>${tableRows}</tbody></table>`;
+  document.getElementById('gpa-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  if (gpa >= 3.67) launchConfetti();
+}
+
+function resetGPA() {
+  document.getElementById('gpa-semesters').innerHTML='';
+  document.getElementById('gpa-result').classList.remove('show');
+  hideError('gpa'); gpaCount=0;
+  localStorage.removeItem('gpa_rows');
+  addCourse('gpa');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  IMPACT
+// ═══════════════════════════════════════════════════════════
+function calculateImpact() {
+  hideError('impact');
+  document.getElementById('impact-result').classList.remove('show');
+  const curGPA = parseFloat(document.getElementById('imp-cur-gpa').value);
+  const curCr  = parseFloat(document.getElementById('imp-cur-cr').value);
+  if (isNaN(curGPA)||curGPA<0||curGPA>4) { showError('impact','Enter current GPA (0–4).'); return; }
+  if (isNaN(curCr)||curCr<0)             { showError('impact','Enter total credits earned.'); return; }
+  const rows = document.querySelectorAll('#impact-courses .impact-row');
+  if (!rows.length) { showError('impact','Add at least one course.'); return; }
+  const courses=[]; const basePoints = curGPA*curCr;
+  for (let i=0; i<rows.length; i++) {
+    const id   = rows[i].id.replace('imp-row-','');
+    const name = document.getElementById(`imp-name-${id}`).value.trim()||`Course ${i+1}`;
+    const cr   = parseFloat(document.getElementById(`imp-cr-${id}`).value);
+    const gr   = parseFloat(document.getElementById(`imp-gr-${id}`).value);
+    if (isNaN(cr)||cr<=0||isNaN(gr)||gr<0||gr>4) { showError('impact',`"${name}": valid credits & grade 0–4.`); return; }
+    courses.push({name,cr,gr});
+  }
+  const newCr = curCr + courses.reduce((s,c)=>s+c.cr,0);
+  const proj  = (basePoints + courses.reduce((s,c)=>s+c.cr*c.gr,0)) / newCr;
+  const delta = proj - curGPA;
+  const sign  = delta>=0?'+':'';
+  const dc    = delta>0.005?'#22c55e':delta<-0.005?'#ef4444':'#8892b0';
+  const [,pc] = gradeLabel(proj);
+
+  let tRows='';
+  courses.forEach(c => {
+    const sg = (basePoints+c.cr*c.gr)/(curCr+c.cr);
+    const d  = sg-curGPA; const s=d>=0?'+':'';
+    const dc2=d>0.005?'#22c55e':d<-0.005?'#ef4444':'#8892b0';
+    const [gl] = gradeLabel(c.gr);
+    tRows+=`<tr>
+      <td>${c.name}</td>
+      <td style="text-align:right">${c.cr}</td>
+      <td style="text-align:right">${c.gr.toFixed(2)}<br><small style="color:var(--muted);font-weight:400">${gl}</small></td>
+      <td style="text-align:right;color:${dc2};font-weight:700">${s}${d.toFixed(3)}</td>
+    </tr>`;
+  });
+
+  document.getElementById('impact-cur-display').textContent  = curGPA.toFixed(2);
+  const projEl = document.getElementById('impact-proj-display');
+  projEl.style.color = pc;
+  animateValue(projEl, proj);
+  document.getElementById('impact-delta-display').textContent = `${sign}${delta.toFixed(3)}`;
+  document.getElementById('impact-delta-display').style.color = dc;
+  setBadge(document.getElementById('impact-badge'), proj);
+  document.getElementById('impact-breakdown').innerHTML = `
+    <div class="breakdown-title">Per-course influence</div>
+    <table><thead><tr><th>Course</th><th style="text-align:right">Cr</th><th style="text-align:right">Grade</th><th style="text-align:right">GPA shift</th></tr></thead>
+    <tbody>${tRows}</tbody></table>
+    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">"GPA shift" = effect if only that course were added.</p>`;
+  document.getElementById('impact-result').classList.add('show');
+  document.getElementById('impact-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  if (proj >= 3.67) launchConfetti();
+}
+
+function resetImpact() {
+  document.getElementById('imp-cur-gpa').value='';
+  document.getElementById('imp-cur-cr').value='';
+  document.getElementById('impact-courses').innerHTML='';
+  document.getElementById('impact-result').classList.remove('show');
+  hideError('impact'); impCount=0; addImpactCourse();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TARGET
+// ═══════════════════════════════════════════════════════════
+function calculateTarget() {
+  hideError('target');
+  const curGPA   = parseFloat(document.getElementById('tgt-cur-gpa').value);
+  const curCr    = parseFloat(document.getElementById('tgt-cur-cr').value);
+  const goal     = parseFloat(document.getElementById('tgt-goal').value);
+  const nextCr   = parseFloat(document.getElementById('tgt-next-cr').value);
+
+  if ([curGPA,curCr,goal,nextCr].some(isNaN)) {
+    document.getElementById('target-result').style.display='none'; return;
+  }
+  if (curGPA<0||curGPA>4||goal<0||goal>4||curCr<0||nextCr<=0) {
+    showError('target','Check your values. GPA must be 0–4, credits must be positive.'); return;
+  }
+
+  // needed SPA: goal = (curGPA*curCr + nextSPA*nextCr) / (curCr+nextCr)
+  // nextSPA = (goal*(curCr+nextCr) - curGPA*curCr) / nextCr
+  const neededSPA = (goal*(curCr+nextCr) - curGPA*curCr) / nextCr;
+  const totalCr   = curCr+nextCr;
+  const projGPA   = (curGPA*curCr + Math.min(Math.max(neededSPA,0),4)*nextCr) / totalCr;
+
+  const spaEl    = document.getElementById('tgt-needed-spa');
+  const gpaEl    = document.getElementById('tgt-new-gpa');
+  const msgEl    = document.getElementById('tgt-message');
+  const resultEl = document.getElementById('target-result');
+
+  resultEl.style.display='block';
+  resultEl.classList.add('show');
+
+  if (neededSPA > 4) {
+    spaEl.textContent = '> 4.00';
+    spaEl.style.color = '#ef4444';
+    gpaEl.textContent = '—';
+    msgEl.textContent = `Unfortunately, it's mathematically impossible to reach GPA ${goal.toFixed(2)} in one semester with only ${nextCr} credits. You need more credits or a longer timeline.`;
+    msgEl.style.color = '#ef4444';
+  } else if (neededSPA < 0) {
+    spaEl.textContent = '0.00';
+    spaEl.style.color = '#22c55e';
+    gpaEl.textContent = projGPA.toFixed(2);
+    msgEl.textContent = `Great news — you've already exceeded your target! Even with the minimum SPA of 0, your GPA will be above ${goal.toFixed(2)}.`;
+    msgEl.style.color = '#22c55e';
+  } else {
+    const [gl, gc] = gradeLabel(neededSPA);
+    spaEl.textContent = neededSPA.toFixed(2);
+    spaEl.style.color = gc;
+    gpaEl.textContent = goal.toFixed(2);
+    gpaEl.style.color = gc;
+    msgEl.textContent = `To reach GPA ${goal.toFixed(2)}, you need a semester SPA of ${neededSPA.toFixed(2)} (${gl}) across ${nextCr} credits.`;
+    msgEl.style.color = 'var(--muted)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONVERT
+// ═══════════════════════════════════════════════════════════
+function updateConvert(val) {
+  val = Math.min(100, Math.max(0, +val));
+  document.getElementById('conv-slider').value = val;
+  document.getElementById('conv-input').value  = val;
+  const g = pctToGrade(val);
+  const [,color] = gradeLabel(g.pts);
+  document.getElementById('conv-pct').textContent    = val + '%';
+  document.getElementById('conv-letter').textContent = g.letter;
+  document.getElementById('conv-letter').style.color = color;
+  document.getElementById('conv-pts').textContent    = g.pts.toFixed(2) + ' points';
+  setBadge(document.getElementById('conv-badge'), g.pts);
+  // highlight row
+  document.querySelectorAll('#scale-table tbody tr').forEach(tr => {
+    const min=+tr.dataset.min, max=+tr.dataset.max;
+    tr.classList.toggle('scale-active', val>=min && val<=max);
+  });
+}
+
+function syncConvert(val) {
+  val = Math.min(100, Math.max(0, +val || 0));
+  updateConvert(val);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HISTORY / CHART
+// ═══════════════════════════════════════════════════════════
+function renderHistory() {
+  hideError('hist');
+  document.getElementById('hist-result').classList.remove('show');
+  const rows = document.querySelectorAll('#hist-rows .course-row');
+  if (!rows.length) { showError('hist','Add at least one semester.'); return; }
+
+  const sems=[]; let runCr=0, runPts=0;
+  for (let i=0; i<rows.length; i++) {
+    const id  = rows[i].id.replace('hist-row-','');
+    const name = document.getElementById(`hist-name-${id}`).value.trim() || `Sem ${i+1}`;
+    const cr   = parseFloat(document.getElementById(`hist-cr-${id}`).value);
+    const spa  = parseFloat(document.getElementById(`hist-spa-${id}`).value);
+    if (isNaN(cr)||cr<=0||isNaN(spa)||spa<0||spa>4) { showError('hist',`Row ${i+1}: valid credits & SPA 0–4.`); return; }
+    runCr += cr; runPts += cr*spa;
+    sems.push({name, cr, spa, cumGPA: runPts/runCr});
+  }
+
+  const finalGPA = sems[sems.length-1].cumGPA;
+  const [,fc] = gradeLabel(finalGPA);
+
+  document.getElementById('hist-result').classList.add('show');
+  animateValue(document.getElementById('hist-gpa-val'), finalGPA);
+  setBadge(document.getElementById('hist-badge'), finalGPA);
+  document.getElementById('hist-axis-end').textContent = `Semester ${sems.length}`;
+
+  // Build bars
+  const chart = document.getElementById('hist-chart');
+  chart.innerHTML = '';
+  const max = 4;
+  sems.forEach(s => {
+    const pct = s.cumGPA / max;
+    const [,color] = gradeLabel(s.cumGPA);
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar-val">${s.cumGPA.toFixed(2)}</div>
+      <div class="bar" style="height:${Math.round(pct*160)}px;background:linear-gradient(to top,${color},${color}88)"></div>
+      <div class="bar-lbl">${s.name}</div>`;
+    chart.appendChild(col);
+  });
+
+  // Table
+  let tRows='';
+  sems.forEach((s,i) => {
+    const [gl,gc]=gradeLabel(s.spa);
+    tRows+=`<tr><td>${s.name}</td><td style="text-align:right">${s.cr}</td><td style="text-align:right;color:${gc}">${s.spa.toFixed(2)}</td><td style="text-align:right;color:${gc}">${s.cumGPA.toFixed(2)}</td></tr>`;
+  });
+  document.getElementById('hist-breakdown').innerHTML=`
+    <div class="breakdown-title" style="margin-top:14px">Semester details</div>
+    <table><thead><tr><th>Semester</th><th style="text-align:right">Credits</th><th style="text-align:right">SPA</th><th style="text-align:right">Cumul. GPA</th></tr></thead>
+    <tbody>${tRows}</tbody></table>`;
+
+  document.getElementById('hist-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  if (finalGPA >= 3.67) launchConfetti();
+}
+
+function resetHistory() {
+  document.getElementById('hist-rows').innerHTML='';
+  document.getElementById('hist-result').classList.remove('show');
+  hideError('hist'); histCount=0;
+  addHistRow(); addHistRow();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ATTENDANCE
+//  Input: course name, total hours, current absence %
+//  Output: hours left until 30% limit
+// ═══════════════════════════════════════════════════════════
+let attCount = 0;
+const ATT_LIMIT = 30;
+
+function addAttRow() {
+  const id = ++attCount;
+  const row = document.createElement('div');
+  row.className = 'att-input-row'; row.id = `att-row-${id}`;
+  row.innerHTML = `
+    <input type="text"   id="att-name-${id}" placeholder="e.g. UX/UI Design" />
+    <input type="number" id="att-hrs-${id}"  placeholder="e.g. 45" min="1" step="1" />
+    <input type="number" id="att-pct-${id}"  placeholder="e.g. 18" min="0" max="100" step="0.1" />
+    <button class="remove-btn" onclick="removeRow('att-row-${id}')">×</button>`;
+  document.getElementById('att-rows').appendChild(row);
+  row.querySelector('input').focus();
+  hideError('attendance');
+}
+
+function calcAttendance() {
+  hideError('attendance');
+  document.getElementById('att-result').classList.remove('show');
+  const rows = document.querySelectorAll('#att-rows .att-input-row');
+  if (!rows.length) { showError('attendance', 'Add at least one course.'); return; }
+
+  const cards = document.getElementById('att-cards');
+  cards.innerHTML = '';
+
+  for (let i = 0; i < rows.length; i++) {
+    const id         = rows[i].id.replace('att-row-', '');
+    const name       = document.getElementById(`att-name-${id}`).value.trim() || `Course ${i+1}`;
+    const totalHours = parseFloat(document.getElementById(`att-hrs-${id}`).value);
+    const absPct     = parseFloat(document.getElementById(`att-pct-${id}`).value);
+
+    if (isNaN(totalHours) || totalHours <= 0) { showError('attendance', `"${name}": enter total hours (e.g. 45).`); return; }
+    if (isNaN(absPct) || absPct < 0 || absPct > 100) { showError('attendance', `"${name}": absence % must be 0–100.`); return; }
+
+    const exceeded = absPct > ATT_LIMIT;
+    const warning  = !exceeded && absPct >= ATT_LIMIT - 7;
+    const color    = exceeded ? '#ef4444' : warning ? '#f97316' : absPct >= 10 ? '#eab308' : '#22c55e';
+
+    // hours already missed
+    const missedHours = Math.round(absPct / 100 * totalHours);
+    // hours left until 30%: limit_hours - missed
+    const limitHours  = totalHours * ATT_LIMIT / 100;
+    const hoursLeft   = Math.max(0, Math.floor(limitHours - missedHours));
+    // % per one hour
+    const pctPerHour  = (1 / totalHours * 100).toFixed(2);
+    // remaining % room
+    const pctLeft     = Math.max(0, ATT_LIMIT - absPct).toFixed(1);
+
+    // bar fill = how much of the 30% limit is used
+    const barPct = Math.min(100, (absPct / ATT_LIMIT) * 100);
+
+    const card = document.createElement('div');
+    card.className = 'att-course-card';
+    card.innerHTML = `
+      <div class="att-course-header">
+        <span class="att-course-name">${name}</span>
+        <span class="att-pct-badge" style="background:${color}22;color:${color};border:1px solid ${color}55">
+          ${absPct.toFixed(1)}%
+        </span>
+      </div>
+
+      <!-- progress bar: 0% → 30% limit -->
+      <div style="position:relative;margin:10px 0 4px">
+        <div class="att-bar-track">
+          <div class="att-bar-fill" style="width:${barPct}%;background:${color}"></div>
+        </div>
+        <!-- 30% marker line -->
+        <div style="position:absolute;right:0;top:-14px;font-size:.68rem;color:#ef4444">30% limit</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:10px">
+        <span>0%</span><span style="color:${color};font-weight:600">${absPct.toFixed(1)}% now</span><span>30%</span>
+      </div>
+
+      <!-- stats row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:var(--surface);border-radius:8px;padding:9px;text-align:center">
+          <div style="font-size:1.15rem;font-weight:800;color:${color}">${absPct.toFixed(1)}%</div>
+          <div style="font-size:.68rem;color:var(--muted)">Current absence</div>
+        </div>
+        <div style="background:var(--surface);border-radius:8px;padding:9px;text-align:center">
+          <div style="font-size:1.15rem;font-weight:800;color:var(--accent2)">${pctLeft}%</div>
+          <div style="font-size:.68rem;color:var(--muted)">Room left</div>
+        </div>
+        <div style="background:var(--surface);border-radius:8px;padding:9px;text-align:center">
+          <div style="font-size:1.15rem;font-weight:800;color:var(--text)">${totalHours}h</div>
+          <div style="font-size:.68rem;color:var(--muted)">Total hours</div>
+        </div>
+      </div>
+
+      <!-- main message -->
+      <div style="padding:10px 14px;border-radius:8px;background:${color}11;border:1px solid ${color}33;font-size:.85rem;color:${color};font-weight:700;line-height:1.5">
+        ${exceeded
+          ? `⛔ Exceeded! You are ${(absPct - ATT_LIMIT).toFixed(1)}% over the limit.`
+          : hoursLeft === 0
+            ? `⚠️ Zero hours left — any absence will exceed 30%.`
+            : `You can miss <span style="font-size:1.1rem">${hoursLeft}</span> more hour${hoursLeft === 1 ? '' : 's'} before hitting 30%`
+        }
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:6px;text-align:right">
+        1 missed hour = ${pctPerHour}% · missed ≈ ${missedHours}h of ${totalHours}h
+      </div>`;
+    cards.appendChild(card);
+  }
+
+  document.getElementById('att-result').classList.add('show');
+  document.getElementById('att-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetAttendance() {
+  document.getElementById('att-rows').innerHTML = '';
+  document.getElementById('att-result').classList.remove('show');
+  hideError('attendance'); attCount = 0; addAttRow();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  POMODORO
+// ═══════════════════════════════════════════════════════════
+const POMO_MODES = { work:25*60, short:5*60, long:15*60 };
+const POMO_LABELS = { work:'Focus time', short:'Short break', long:'Long break' };
+const RING_CIRC = 2 * Math.PI * 96; // ≈ 603.2
+let pomoMode = 'work', pomoTotal = POMO_MODES.work;
+let pomoLeft = pomoTotal, pomoRunning = false, pomoTimer = null;
+let pomoSessions = 0, pomoTotalMin = 0;
+const pomoLog = JSON.parse(localStorage.getItem('pomo_log') || '[]');
+
+function setPomoMode(mode, btn) {
+  if (pomoRunning) return;
+  pomoMode  = mode;
+  pomoTotal = POMO_MODES[mode];
+  pomoLeft  = pomoTotal;
+  document.querySelectorAll('.pomo-mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const colors = { work:'#6c63ff', short:'#22c55e', long:'#38bdf8' };
+  document.getElementById('pomo-ring').style.stroke = colors[mode];
+  updatePomoDisplay();
+}
+
+function togglePomo() {
+  if (pomoRunning) {
+    clearInterval(pomoTimer); pomoRunning = false;
+    document.getElementById('pomo-start-btn').textContent = 'Resume';
+  } else {
+    pomoRunning = true;
+    document.getElementById('pomo-start-btn').textContent = 'Pause';
+    pomoTimer = setInterval(() => {
+      pomoLeft--;
+      updatePomoDisplay();
+      if (pomoLeft <= 0) {
+        clearInterval(pomoTimer); pomoRunning = false;
+        document.getElementById('pomo-start-btn').textContent = 'Start';
+        onPomoComplete();
+      }
+    }, 1000);
+  }
+}
+
+function onPomoComplete() {
+  // beep
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 200, 400].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(.3, ctx.currentTime + delay/1000);
+      gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + delay/1000 + .3);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime + delay/1000 + .3);
+    });
+  } catch(e) {}
+
+  if (pomoMode === 'work') {
+    pomoSessions++;
+    pomoTotalMin += 25;
+    document.getElementById('pomo-sessions').textContent  = pomoSessions;
+    document.getElementById('pomo-total-min').textContent = pomoTotalMin;
+    // log it
+    const note = document.getElementById('pomo-note').value.trim();
+    const now  = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const entry = { time: now, note: note || 'Focused session', min: 25 };
+    pomoLog.unshift(entry);
+    localStorage.setItem('pomo_log', JSON.stringify(pomoLog.slice(0,30)));
+    renderPomoLog();
+    launchConfetti();
+  }
+
+  pomoLeft = pomoTotal;
+  updatePomoDisplay();
+}
+
+function resetPomo() {
+  clearInterval(pomoTimer); pomoRunning = false;
+  pomoLeft = pomoTotal;
+  document.getElementById('pomo-start-btn').textContent = 'Start';
+  updatePomoDisplay();
+}
+
+function updatePomoDisplay() {
+  const m = Math.floor(pomoLeft / 60).toString().padStart(2,'0');
+  const s = (pomoLeft % 60).toString().padStart(2,'0');
+  document.getElementById('pomo-time').textContent  = `${m}:${s}`;
+  document.getElementById('pomo-label').textContent = POMO_LABELS[pomoMode];
+  const pct    = pomoLeft / pomoTotal;
+  const offset = RING_CIRC * pct;
+  document.getElementById('pomo-ring').style.strokeDashoffset = RING_CIRC - offset;
+  // page title countdown
+  document.title = pomoRunning ? `${m}:${s} — UniKit` : 'UniKit';
+}
+
+function renderPomoLog() {
+  const el = document.getElementById('pomo-log');
+  if (!pomoLog.length) { el.innerHTML='<p style="color:var(--muted);font-size:.85rem">No sessions yet.</p>'; return; }
+  el.innerHTML = pomoLog.map(e => `
+    <div class="pomo-log-item">
+      <span>🍅 ${e.note}</span>
+      <span class="pomo-log-time">${e.time} · ${e.min}m</span>
+    </div>`).join('');
+}
+
+function clearPomoLog() {
+  pomoLog.length = 0;
+  localStorage.removeItem('pomo_log');
+  renderPomoLog();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROFILE CARD
+// ═══════════════════════════════════════════════════════════
+function renderCard() {
+  const name     = document.getElementById('prof-name').value.trim()     || 'Your Name';
+  const uni      = document.getElementById('prof-uni').value.trim()      || 'University';
+  const major    = document.getElementById('prof-major').value.trim()    || 'Major';
+  const gpa      = parseFloat(document.getElementById('prof-gpa').value);
+  const sem      = document.getElementById('prof-sem').value.trim()      || '—';
+  const cr       = parseFloat(document.getElementById('prof-cr').value)      || 0;
+  const totalCr  = parseFloat(document.getElementById('prof-total-cr').value)|| 240;
+
+  // Avatar initials
+  const initials = name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '?';
+  document.getElementById('pc-avatar').textContent = initials;
+  document.getElementById('pc-name').textContent   = name;
+  document.getElementById('pc-uni').textContent    = uni;
+  document.getElementById('pc-major').textContent  = major;
+  document.getElementById('pc-sem').textContent    = sem;
+
+  // GPA
+  if (!isNaN(gpa)) {
+    const [gl, gc] = gradeLabel(gpa);
+    document.getElementById('pc-gpa').textContent   = gpa.toFixed(2);
+    document.getElementById('pc-gpa').style.color   = gc;
+    // Badges
+    const badges = [];
+    if (gpa >= 3.67) badges.push(['Dean\'s List',     '#22c55e']);
+    if (gpa >= 3.00) badges.push(['Good Standing',    '#84cc16']);
+    if (gpa >= 3.50) badges.push(['Honor Roll',       '#a78bfa']);
+    if (gpa <  2.00) badges.push(['Academic Warning', '#ef4444']);
+    document.getElementById('pc-badge-row').innerHTML = badges.map(([l,c]) =>
+      `<span class="pc-badge" style="background:${c}22;color:${c};border:1px solid ${c}55">${l}</span>`
+    ).join('');
+  } else {
+    document.getElementById('pc-gpa').textContent = '—';
+    document.getElementById('pc-badge-row').innerHTML = '';
+  }
+
+  // Credits progress
+  const pct = Math.min(100, Math.round((cr / totalCr) * 100)) || 0;
+  document.getElementById('pc-cr-pct').textContent          = `${cr}/${totalCr}`;
+  document.getElementById('pc-bar-fill').style.width        = pct + '%';
+  document.getElementById('pc-bar-label').textContent       = `${pct}% progress to graduation`;
+}
+
+function downloadCard() {
+  const card = document.getElementById('profile-card');
+  html2canvas(card, { backgroundColor: null, scale: 2 }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'academic-profile.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+loadSaved();
+updateConvert(85);
+addAttRow();
+renderPomoLog();
+updatePomoDisplay();
+renderCard();
 </script>
 </body>
 </html>
