@@ -1,27 +1,78 @@
 """
 MySdu scraper backend — runs locally at http://localhost:5001
 Logs into my.sdu.edu.kz and returns transcript + attendance as JSON.
+Supports 2FA (OTP via email).
 """
 
 import re
+import uuid
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=["*"])   # allow localhost frontend and GitHub Pages
+CORS(app, origins=["*"])
 
-MYSDU_BASE   = "https://my.sdu.edu.kz"
-LOGIN_URL    = f"{MYSDU_BASE}/loginAuth.php"
+MYSDU_BASE     = "https://my.sdu.edu.kz"
+LOGIN_URL      = f"{MYSDU_BASE}/loginAuth.php"
 TRANSCRIPT_URL = f"{MYSDU_BASE}/index.php?mod=transkript"
 ATTENDANCE_URL = f"{MYSDU_BASE}/index.php?mod=ejurnal"
+
+UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+      "AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/124.0.0.0 Safari/537.36")
+
+# In-memory store for sessions awaiting 2FA  { token: {"session": ..., "otp_url": ..., "otp_fields": ...} }
+_pending: dict = {}
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def _login(session: requests.Session, username: str, password: str) -> bool:
-    """POST login form; return True if session is authenticated."""
+def _clean(text: str) -> str:
+    return re.sub(r'\s+', ' ', text).strip()
+
+
+def _is_2fa_page(html: str) -> bool:
+    """Detect if MySdu is showing a 2FA / OTP form."""
+    lower = html.lower()
+    return any(k in lower for k in ["otp", "one-time", "verification code",
+                                     "код подтверждения", "растау коды",
+                                     "tfa", "2fa", "two-factor", "two factor"])
+
+
+def _extract_otp_form(html: str, base_url: str) -> tuple[str, dict]:
+    """Return (form_action_url, hidden_fields_dict) from the OTP page."""
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
+    action = base_url
+    hidden = {}
+    if form:
+        action_attr = form.get("action", "")
+        if action_attr.startswith("http"):
+            action = action_attr
+        elif action_attr:
+            action = MYSDU_BASE + "/" + action_attr.lstrip("/")
+        # Collect all hidden inputs (CSRF tokens etc.)
+        for inp in form.find_all("input", type="hidden"):
+            name = inp.get("name")
+            val  = inp.get("value", "")
+            if name:
+                hidden[name] = val
+    return action, hidden
+
+
+def _login_step1(username: str, password: str) -> tuple[requests.Session, str, str]:
+    """
+    POST login form.
+    Returns (session, status, detail) where status is:
+      "ok"    — fully logged in, no 2FA
+      "2fa"   — 2FA page detected, detail = pending token
+      "fail"  — wrong credentials
+    """
+    session = requests.Session()
+    session.headers.update({"User-Agent": UA})
+
     payload = {
         "username":  username,
         "password":  password,
@@ -31,37 +82,68 @@ def _login(session: requests.Session, username: str, password: str) -> bool:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "Referer": f"{MYSDU_BASE}/index.php",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/124.0.0.0 Safari/537.36",
     }
-    resp = session.post(LOGIN_URL, data=payload, headers=headers, allow_redirects=True, timeout=15)
-    # If login fails MySdu redirects back to index with no PHPSESSID carrying user data
-    # A successful login keeps us on a page that does NOT contain the login form
-    return "loginAuth.php" not in resp.url and resp.status_code == 200
+    resp = session.post(LOGIN_URL, data=payload, headers=headers,
+                        allow_redirects=True, timeout=15)
+
+    if resp.status_code != 200:
+        return session, "fail", "HTTP error"
+
+    html = resp.text
+
+    # Check for 2FA
+    if _is_2fa_page(html):
+        otp_url, hidden = _extract_otp_form(html, resp.url)
+        token = str(uuid.uuid4())
+        _pending[token] = {
+            "session":    session,
+            "otp_url":    otp_url,
+            "otp_hidden": hidden,
+        }
+        return session, "2fa", token
+
+    # Check that we're not back on the login form
+    if "loginAuth.php" in resp.url or "LogIn" in html[:2000]:
+        return session, "fail", "Bad credentials"
+
+    return session, "ok", ""
 
 
-def _clean(text: str) -> str:
-    return re.sub(r'\s+', ' ', text).strip()
+def _login_step2(token: str, otp: str) -> tuple[requests.Session | None, str]:
+    """
+    Submit the OTP. Returns (session, "ok") or (None, error_message).
+    """
+    pending = _pending.pop(token, None)
+    if pending is None:
+        return None, "Session expired or invalid token — please start over"
+
+    session: requests.Session = pending["session"]
+    otp_url: str              = pending["otp_url"]
+    hidden: dict              = pending["otp_hidden"]
+
+    # Build OTP payload — try common field names
+    payload = dict(hidden)
+    for field_name in ("otp", "code", "otp_code", "verification_code", "token", "tfa_code"):
+        payload[field_name] = otp
+
+    resp = session.post(otp_url, data=payload,
+                        headers={"Content-Type": "application/x-www-form-urlencoded",
+                                 "Referer": otp_url},
+                        allow_redirects=True, timeout=15)
+
+    html = resp.text
+    if _is_2fa_page(html):
+        return None, "OTP incorrect or expired — check your email and try again"
+
+    if resp.status_code != 200:
+        return None, f"OTP submission failed (HTTP {resp.status_code})"
+
+    return session, "ok"
 
 
 # ── transcript scraper ────────────────────────────────────────────────────────
 
 def scrape_transcript(session: requests.Session) -> list[dict]:
-    """
-    Returns a list of semester dicts:
-    {
-      "semester": "2023-2024 Fall",
-      "sa": 120,        # semester academic hours/credits
-      "ga": 120,        # cumulative
-      "spa": 3.50,
-      "gpa": 3.42,
-      "courses": [
-        { "code": "CS101", "title": "...", "credits": 5, "ects": 7.5,
-          "grade": 85, "letter": "B+", "point": 3.33, "traditional": "Хорошо" }
-      ]
-    }
-    """
     resp = session.get(TRANSCRIPT_URL, timeout=15)
     if resp.status_code != 200:
         return []
@@ -70,15 +152,11 @@ def scrape_transcript(session: requests.Session) -> list[dict]:
     semesters = []
     current_semester = None
 
-    rows = soup.select("table tr")
-
-    for row in rows:
+    for row in soup.select("table tr"):
         cells = row.find_all("td")
         if not cells:
             continue
 
-        # Detect semester header rows — they typically have a single cell spanning columns
-        # and contain year + season text like "2023-2024 - Осенний"
         if len(cells) == 1:
             text = _clean(cells[0].get_text())
             if re.search(r'\d{4}[-–]\d{4}', text):
@@ -87,49 +165,36 @@ def scrape_transcript(session: requests.Session) -> list[dict]:
                 semesters.append(current_semester)
             continue
 
-        # Detect semester footer rows — maroon color rows with SPA/GPA totals
         style = row.get("style", "")
         if "Maroon" in style or "maroon" in style:
             if current_semester is None:
                 continue
-            texts = [_clean(c.get_text()) for c in cells]
-            # Footer format: SA | GA | SPA | GPA  (positions vary, find by label)
-            full_text = " ".join(texts)
-            sa_m  = re.search(r'SA[:\s]+(\d+\.?\d*)', full_text)
-            ga_m  = re.search(r'GA[:\s]+(\d+\.?\d*)', full_text)
-            spa_m = re.search(r'SPA[:\s]+(\d+\.?\d*)', full_text)
-            gpa_m = re.search(r'GPA[:\s]+(\d+\.?\d*)', full_text)
-            if sa_m:  current_semester["sa"]  = float(sa_m.group(1))
-            if ga_m:  current_semester["ga"]  = float(ga_m.group(1))
-            if spa_m: current_semester["spa"] = float(spa_m.group(1))
-            if gpa_m: current_semester["gpa"] = float(gpa_m.group(1))
+            full_text = " ".join(_clean(c.get_text()) for c in cells)
+            for key, pat in [("sa", r'SA[:\s]+(\d+\.?\d*)'),
+                             ("ga", r'GA[:\s]+(\d+\.?\d*)'),
+                             ("spa", r'SPA[:\s]+(\d+\.?\d*)'),
+                             ("gpa", r'GPA[:\s]+(\d+\.?\d*)')]:
+                m = re.search(pat, full_text)
+                if m:
+                    current_semester[key] = float(m.group(1))
             continue
 
-        # Regular course rows — class "clsTd" or similar with ≥8 cells
         if current_semester is None or len(cells) < 7:
             continue
 
         texts = [_clean(c.get_text()) for c in cells]
-        # Typical column order:
-        # 0: № | 1: code | 2: title | 3: credits | 4: ECTS | 5: grade | 6: letter | 7: point | 8: traditional
         try:
-            # Try to parse — skip header rows (non-numeric credits)
-            code     = texts[1] if len(texts) > 1 else ""
-            title    = texts[2] if len(texts) > 2 else ""
-            credits  = float(texts[3]) if len(texts) > 3 and texts[3].replace('.','',1).isdigit() else None
-            ects     = float(texts[4]) if len(texts) > 4 and texts[4].replace('.','',1).isdigit() else None
-            grade    = float(texts[5]) if len(texts) > 5 and texts[5].replace('.','',1).isdigit() else None
-            letter   = texts[6] if len(texts) > 6 else ""
-            point    = float(texts[7]) if len(texts) > 7 and texts[7].replace('.','',1).isdigit() else None
-            trad     = texts[8] if len(texts) > 8 else ""
-
+            credits = float(texts[3]) if texts[3].replace('.','',1).isdigit() else None
+            grade   = float(texts[5]) if texts[5].replace('.','',1).isdigit() else None
             if credits is None or grade is None:
-                continue  # skip header/label rows
-
+                continue
             current_semester["courses"].append({
-                "code": code, "title": title, "credits": credits,
-                "ects": ects, "grade": grade, "letter": letter,
-                "point": point, "traditional": trad,
+                "code": texts[1], "title": texts[2], "credits": credits,
+                "ects": float(texts[4]) if texts[4].replace('.','',1).isdigit() else None,
+                "grade": grade,
+                "letter": texts[6] if len(texts) > 6 else "",
+                "point": float(texts[7]) if len(texts) > 7 and texts[7].replace('.','',1).isdigit() else None,
+                "traditional": texts[8] if len(texts) > 8 else "",
             })
         except (IndexError, ValueError):
             continue
@@ -140,46 +205,22 @@ def scrape_transcript(session: requests.Session) -> list[dict]:
 # ── attendance scraper ────────────────────────────────────────────────────────
 
 def scrape_attendance(session: requests.Session) -> list[dict]:
-    """
-    Returns list of course attendance dicts:
-    {
-      "course": "Calculus",
-      "total_hours": 45,
-      "absences": 8,
-      "absence_pct": 17.78
-    }
-    """
     resp = session.get(ATTENDANCE_URL, timeout=15)
     if resp.status_code != 200:
         return []
 
     soup = BeautifulSoup(resp.text, "html.parser")
     courses = []
-    rows = soup.select("table tr")
 
-    for row in rows:
+    for row in soup.select("table tr"):
         cells = row.find_all("td")
         if len(cells) < 4:
             continue
         texts = [_clean(c.get_text()) for c in cells]
-        # Try to find rows with numeric attendance data
+        course_name = texts[0]
+        if not course_name or course_name.lower() in ("", "дисциплина", "course", "пән"):
+            continue
         try:
-            # Look for pattern: course name | total | absences | pct
-            # MySdu ejurnal typically: course | lec_absent | prac_absent | lab_absent | total_absent | total_hours | pct
-            course_name = texts[0]
-            if not course_name or course_name.lower() in ("", "дисциплина", "course", "пән"):
-                continue
-
-            # Find total hours and absence count — scan cells for numbers
-            nums = []
-            for t in texts[1:]:
-                t_clean = t.replace('%', '').strip()
-                try:
-                    nums.append(float(t_clean))
-                except ValueError:
-                    nums.append(None)
-
-            # Heuristic: last numeric-looking cell ending in % is absence_pct
             pct = None
             for t in reversed(texts):
                 if '%' in t:
@@ -189,24 +230,13 @@ def scrape_attendance(session: requests.Session) -> list[dict]:
                     except ValueError:
                         pass
 
-            # Total hours and absences: find two consecutive integers
-            total_hours = None
-            absences = None
-            valid_nums = [n for n in nums if n is not None]
-            if len(valid_nums) >= 2:
-                absences    = int(valid_nums[-2]) if pct is None else None
-                total_hours = int(valid_nums[-1]) if pct is None else None
-
-            if pct is None and total_hours and absences is not None:
-                pct = round(absences / total_hours * 100, 2) if total_hours > 0 else 0
-
             if pct is None:
                 continue
 
             courses.append({
                 "course": course_name,
-                "total_hours": total_hours,
-                "absences": absences,
+                "total_hours": None,
+                "absences": None,
                 "absence_pct": pct,
             })
         except (IndexError, ValueError):
@@ -215,31 +245,51 @@ def scrape_attendance(session: requests.Session) -> list[dict]:
     return courses
 
 
+def _scrape_all(session: requests.Session) -> dict:
+    return {
+        "ok": True,
+        "transcript": scrape_transcript(session),
+        "attendance": scrape_attendance(session),
+    }
+
+
 # ── API endpoints ─────────────────────────────────────────────────────────────
 
-@app.route("/api/mysdu", methods=["POST"])
-def api_mysdu():
-    body = request.get_json(silent=True) or {}
+@app.route("/api/mysdu/login", methods=["POST"])
+def api_login():
+    body     = request.get_json(silent=True) or {}
     username = body.get("username", "").strip()
     password = body.get("password", "").strip()
 
     if not username or not password:
         return jsonify({"error": "username and password required"}), 400
 
-    session = requests.Session()
-    session.headers.update({"User-Agent": "Mozilla/5.0"})
+    session, status, detail = _login_step1(username, password)
 
-    if not _login(session, username, password):
+    if status == "fail":
         return jsonify({"error": "Login failed — check your credentials"}), 401
 
-    transcript  = scrape_transcript(session)
-    attendance  = scrape_attendance(session)
+    if status == "2fa":
+        return jsonify({"needs_otp": True, "token": detail}), 200
 
-    return jsonify({
-        "ok": True,
-        "transcript": transcript,
-        "attendance": attendance,
-    })
+    # No 2FA — scrape immediately
+    return jsonify(_scrape_all(session))
+
+
+@app.route("/api/mysdu/verify", methods=["POST"])
+def api_verify():
+    body  = request.get_json(silent=True) or {}
+    token = body.get("token", "").strip()
+    otp   = body.get("otp", "").strip()
+
+    if not token or not otp:
+        return jsonify({"error": "token and otp required"}), 400
+
+    session, result = _login_step2(token, otp)
+    if session is None:
+        return jsonify({"error": result}), 401
+
+    return jsonify(_scrape_all(session))
 
 
 @app.route("/health")
@@ -251,5 +301,6 @@ def health():
 
 if __name__ == "__main__":
     print("MySdu proxy running at http://localhost:5001")
-    print("POST /api/mysdu  { username, password }")
+    print("Step 1: POST /api/mysdu/login   { username, password }")
+    print("Step 2: POST /api/mysdu/verify  { token, otp }  (if 2FA required)")
     app.run(host="127.0.0.1", port=5001, debug=False)

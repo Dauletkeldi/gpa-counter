@@ -784,15 +784,23 @@ function downloadCard() {
 //  MYSDU IMPORT
 // ═══════════════════════════════════════════════════════════
 
-let _mysduData = null;   // cached last fetch result
+let _mysduData  = null;   // cached last fetch result
+let _mysduToken = null;   // pending 2FA token
 
 async function importMySdu() {
-  const user = document.getElementById('mysdu-user').value.trim();
-  const pass = document.getElementById('mysdu-pass').value.trim();
   const errEl = document.getElementById('mysdu-error');
   const btn   = document.getElementById('mysdu-btn');
-
   errEl.classList.remove('show');
+
+  // If we have a pending 2FA token, submit OTP instead
+  if (_mysduToken) {
+    await _submitOtp(errEl, btn);
+    return;
+  }
+
+  const user = document.getElementById('mysdu-user').value.trim();
+  const pass = document.getElementById('mysdu-pass').value.trim();
+
   if (!user || !pass) {
     errEl.textContent = 'Please enter username and password.';
     errEl.classList.add('show');
@@ -800,10 +808,10 @@ async function importMySdu() {
   }
 
   btn.disabled = true;
-  btn.textContent = 'Fetching…';
+  btn.textContent = 'Logging in…';
 
   try {
-    const resp = await fetch('http://127.0.0.1:5001/api/mysdu', {
+    const resp = await fetch('http://127.0.0.1:5001/api/mysdu/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: user, password: pass }),
@@ -811,13 +819,24 @@ async function importMySdu() {
 
     const data = await resp.json();
 
-    if (!resp.ok || !data.ok) {
-      errEl.textContent = data.error || 'Request failed — is the backend running?';
+    if (!resp.ok) {
+      errEl.textContent = data.error || 'Login failed.';
       errEl.classList.add('show');
       return;
     }
 
-    _mysduData = data;
+    if (data.needs_otp) {
+      // 2FA required — show OTP field
+      _mysduToken = data.token;
+      document.getElementById('mysdu-otp-wrap').style.display = 'block';
+      document.getElementById('mysdu-otp').focus();
+      btn.textContent = 'Submit OTP';
+      return;
+    }
+
+    // No 2FA — got data directly
+    _mysduToken = null;
+    _mysduData  = data;
     renderMySduSummary(data);
     document.getElementById('mysdu-result').style.display = 'block';
 
@@ -826,7 +845,54 @@ async function importMySdu() {
     errEl.classList.add('show');
   } finally {
     btn.disabled = false;
+    if (!_mysduToken) btn.textContent = 'Fetch from MySdu';
+  }
+}
+
+async function _submitOtp(errEl, btn) {
+  const otp = document.getElementById('mysdu-otp').value.trim();
+  if (!otp) {
+    errEl.textContent = 'Enter the OTP code from your email.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+
+  try {
+    const resp = await fetch('http://127.0.0.1:5001/api/mysdu/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _mysduToken, otp }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      errEl.textContent = data.error || 'OTP verification failed.';
+      errEl.classList.add('show');
+      // Keep token so user can retry with correct OTP
+      btn.disabled = false;
+      btn.textContent = 'Submit OTP';
+      return;
+    }
+
+    // Success
+    _mysduToken = null;
+    _mysduData  = data;
+    document.getElementById('mysdu-otp-wrap').style.display = 'none';
+    document.getElementById('mysdu-otp').value = '';
+    renderMySduSummary(data);
+    document.getElementById('mysdu-result').style.display = 'block';
     btn.textContent = 'Fetch from MySdu';
+
+  } catch (e) {
+    errEl.textContent = 'Cannot reach backend.';
+    errEl.classList.add('show');
+    btn.textContent = 'Submit OTP';
+  } finally {
+    btn.disabled = false;
   }
 }
 

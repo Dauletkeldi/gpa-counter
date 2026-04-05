@@ -388,6 +388,16 @@
     <label style="margin-top:12px">Password</label>
     <input type="password" id="mysdu-pass" placeholder="Your MySdu password" autocomplete="current-password" />
 
+    <!-- OTP step — hidden until 2FA is triggered -->
+    <div id="mysdu-otp-wrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--muted)">
+        📧 An OTP code was sent to your SDU email. Enter it below.
+      </div>
+      <label>OTP Code</label>
+      <input type="text" id="mysdu-otp" placeholder="e.g. 916189" maxlength="8" autocomplete="one-time-code"
+             style="letter-spacing:.15em;font-size:1.1rem" />
+    </div>
+
     <p class="error-msg" id="mysdu-error"></p>
   </div>
 
