@@ -116,17 +116,37 @@ header p {
 }
 
 /* ─────────────────────────────────────────
-   TABS
+   NAV
 ───────────────────────────────────────── */
-.tabs {
+.nav-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 780px;
+}
+
+.tabs-primary {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 40px;
-  max-width: 780px;
   width: 100%;
 }
+
+.tabs-secondary {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
+  animation: slideUp .2s ease;
+}
+.tabs-secondary.open { display: flex; }
 
 .tab-btn {
   display: flex;
@@ -158,6 +178,27 @@ header p {
   border-color: transparent;
   box-shadow: 0 0 0 1px var(--accent-dk), 0 6px 20px var(--glow);
   transform: translateY(-1px);
+}
+
+/* secondary tools — slightly smaller, dimmer by default */
+.tab-btn.secondary {
+  font-size: .76rem;
+  padding: 7px 14px;
+  opacity: .85;
+}
+.tab-btn.secondary.active { opacity: 1; }
+
+/* More toggle button */
+.more-toggle {
+  border-style: dashed;
+  color: var(--muted);
+}
+.more-toggle:hover { border-style: solid; }
+.more-toggle.open {
+  background: var(--card2);
+  border-color: var(--border2);
+  border-style: solid;
+  color: var(--text);
 }
 
 /* ─────────────────────────────────────────

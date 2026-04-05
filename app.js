@@ -114,6 +114,22 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   btn.classList.add('active');
+  // if a secondary tab was picked, keep the drawer open & mark toggle
+  const isSecondary = btn.closest('.tabs-secondary');
+  const toggleBtn = document.getElementById('more-toggle-btn');
+  if (isSecondary) {
+    toggleBtn.classList.add('open');
+    document.getElementById('tabs-secondary').classList.add('open');
+    toggleBtn.textContent = 'Tools ▴';
+  }
+}
+
+function toggleMore() {
+  const drawer = document.getElementById('tabs-secondary');
+  const btn    = document.getElementById('more-toggle-btn');
+  const open   = drawer.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.textContent = open ? 'Tools ▴' : 'Tools ▾';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -141,7 +157,7 @@ function addCourse(type) {
 function addImpactCourse() {
   const id = ++impCount;
   const row = document.createElement('div');
-  row.className = 'course-row wide'; row.id = `imp-row-${id}`;
+  row.className = 'course-row wide impact-row'; row.id = `imp-row-${id}`;
   row.innerHTML = `
     <input type="text"   id="imp-name-${id}" placeholder="e.g. Math" />
     <input type="number" id="imp-cr-${id}"   placeholder="Credits" min="0" step="0.5" />
