@@ -903,17 +903,30 @@ function renderMySduSummary(data) {
   let html = '';
 
   if (transcript.length) {
+    // Compute totals for completed semesters (spa > 0)
+    const completed = transcript.filter(s => s.spa && s.spa > 0 && s.credits);
+    const totalCr  = completed.reduce((a, s) => a + (s.credits || 0), 0);
+    const lastGPA  = completed.length ? completed[completed.length - 1].gpa : null;
+
     html += `<div style="font-weight:700;font-size:.9rem;color:var(--accent2);margin-bottom:4px">📚 Transcript — ${transcript.length} semester(s)</div>`;
     transcript.forEach((sem, i) => {
-      const spa = sem.spa != null ? sem.spa.toFixed(2) : '?';
-      const gpa = sem.gpa != null ? sem.gpa.toFixed(2) : '?';
+      const spa  = sem.spa  != null ? sem.spa.toFixed(2)  : '?';
+      const gpa  = sem.gpa  != null ? sem.gpa.toFixed(2)  : '?';
+      const cr   = sem.credits != null ? sem.credits : '?';
       const courses = sem.courses ? sem.courses.length : 0;
-      html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.83rem">
+      const isCurrent = sem.spa === 0 || sem.spa == null;
+      html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.83rem${isCurrent ? ';opacity:.65' : ''}">
         <span style="font-weight:600">${sem.semester || 'Semester ' + (i+1)}</span>
-        <span style="float:right;color:var(--muted)">${courses} courses</span>
-        <div style="margin-top:4px;color:var(--muted)">SPA: <strong style="color:var(--accent2)">${spa}</strong> &nbsp; GPA: <strong style="color:var(--accent2)">${gpa}</strong> &nbsp; Credits: <strong>${sem.sa ?? '?'}</strong></div>
+        <span style="float:right;color:var(--muted)">${courses} courses${isCurrent ? ' · In Progress' : ''}</span>
+        <div style="margin-top:4px;color:var(--muted)">SPA: <strong style="color:var(--accent2)">${spa}</strong> &nbsp; GPA: <strong style="color:var(--accent2)">${gpa}</strong> &nbsp; Credits: <strong>${cr}</strong></div>
       </div>`;
     });
+
+    if (lastGPA != null) {
+      html += `<div style="margin-top:10px;background:var(--bg);border:1px solid var(--accent);border-radius:var(--r-sm);padding:10px 14px;font-size:.83rem">
+        Completed: <strong>${totalCr}</strong> credits &nbsp;·&nbsp; GPA: <strong style="color:var(--accent2)">${lastGPA.toFixed(2)}</strong>
+      </div>`;
+    }
   } else {
     html += `<div style="color:var(--muted);font-size:.85rem">No transcript data found.</div>`;
   }
@@ -931,6 +944,44 @@ function renderMySduSummary(data) {
   }
 
   el.innerHTML = html;
+}
+
+function applyMySduToImpact() {
+  if (!_mysduData || !_mysduData.transcript) return;
+  const transcript = _mysduData.transcript;
+
+  // Completed semesters = those with spa > 0 and credits
+  const completed = transcript.filter(s => s.spa && s.spa > 0 && s.credits);
+  if (!completed.length) return;
+
+  // Total credits from all completed semesters
+  const totalCr = completed.reduce((a, s) => a + (s.credits || 0), 0);
+  // GPA from last completed semester footer
+  const lastGPA = completed[completed.length - 1].gpa;
+
+  // Fill Impact "Current Standing" inputs
+  document.getElementById('imp-cur-gpa').value = lastGPA != null ? lastGPA.toFixed(2) : '';
+  document.getElementById('imp-cur-cr').value  = totalCr;
+
+  // Find "in progress" semester (spa === 0 or null) and pre-fill its courses
+  const currentSem = transcript.find(s => !s.spa || s.spa === 0);
+  if (currentSem && currentSem.courses && currentSem.courses.length) {
+    document.getElementById('impact-courses').innerHTML = '';
+    currentSem.courses.forEach(c => {
+      addImpactCourse();
+      const rows = document.getElementById('impact-courses').querySelectorAll('.impact-row');
+      const last = rows[rows.length - 1];
+      if (!last) return;
+      const inputs = last.querySelectorAll('input');
+      if (inputs[0]) inputs[0].value = c.title || c.code;
+      if (inputs[1]) inputs[1].value = c.credits ?? '';
+      // Leave grade empty — user fills in expected grade
+    });
+  }
+
+  // Switch to Impact tab
+  const impBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('Impact'));
+  if (impBtn) switchTab('impact', impBtn);
 }
 
 function applyMySduToGPA() {

@@ -166,16 +166,18 @@ def scrape_transcript(session: requests.Session) -> list[dict]:
             # matches "2023 - 2024. 1" or "2023-2024. 1" etc.
             if re.search(r'\d{4}\s*[-–]\s*\d{4}', text):
                 current_semester = {"semester": text.strip(), "courses": [],
-                                    "sa": None, "ga": None, "spa": None, "gpa": None}
+                                    "sa": None, "ga": None, "spa": None, "gpa": None,
+                                    "credits": None, "ects": None}
                 semesters.append(current_semester)
             continue
 
-        # Semester footer: maroon style with SA/GA/SPA/GPA
+        # Semester footer: maroon style with credits / ECTS / SA/GA/SPA/GPA
         style = row.get("style", "")
         if "Maroon" in style or "maroon" in style:
             if current_semester is None:
                 continue
-            full_text = " ".join(_clean(c.get_text()) for c in cells)
+            texts_f = [_clean(c.get_text()) for c in cells]
+            full_text = " ".join(texts_f)
             for key, pat in [("sa",  r'SA\s*:\s*(\d+\.?\d*)'),
                              ("ga",  r'GA\s*:\s*(\d+\.?\d*)'),
                              ("spa", r'SPA\s*:\s*(\d+\.?\d*)'),
@@ -183,6 +185,16 @@ def scrape_transcript(session: requests.Session) -> list[dict]:
                 m = re.search(pat, full_text)
                 if m:
                     current_semester[key] = float(m.group(1))
+            # cells[2] = internal credits, cells[3] = ECTS
+            if len(cells) >= 4:
+                try:
+                    current_semester["credits"] = float(texts_f[2])
+                except (ValueError, IndexError):
+                    pass
+                try:
+                    current_semester["ects"] = float(texts_f[3])
+                except (ValueError, IndexError):
+                    pass
             continue
 
         # Course row: must have exactly 8 cells (code, title, credit, ects, grade, letter, point, traditional)
