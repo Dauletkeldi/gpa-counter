@@ -38,6 +38,7 @@
     <button class="tab-btn secondary" onclick="switchTab('history',this)">📈 History</button>
     <button class="tab-btn secondary" onclick="switchTab('pomodoro',this)">🍅 Pomodoro</button>
     <button class="tab-btn secondary" onclick="switchTab('profile',this)">🪪 Profile</button>
+    <button class="tab-btn secondary" onclick="switchTab('mysdu',this)">🔗 MySdu</button>
   </div>
 </nav>
 
@@ -364,6 +365,43 @@
   </div>
 
   <button class="calc-btn" onclick="downloadCard()">Download Card as PNG</button>
+</div>
+
+<!-- ══════════════════════════ MYSDU IMPORT ══════════════════════════ -->
+<div class="panel" id="panel-mysdu">
+  <div class="card">
+    <h2>MySdu Import</h2>
+    <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:16px">
+      Automatically fetch your transcript and attendance from
+      <strong>my.sdu.edu.kz</strong>.<br>
+      Your credentials are sent only to the local proxy running on your machine — never to any external server.
+    </p>
+
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:16px;font-size:.82rem;color:var(--muted)">
+      ⚠️ <strong>Requires local backend.</strong> Run <code style="color:var(--accent2)">python server.py</code> inside the
+      <code style="color:var(--accent2)">backend/</code> folder before using this feature.
+    </div>
+
+    <label>MySdu Username (student ID)</label>
+    <input type="text" id="mysdu-user" placeholder="e.g. 220103001" autocomplete="username" />
+
+    <label style="margin-top:12px">Password</label>
+    <input type="password" id="mysdu-pass" placeholder="Your MySdu password" autocomplete="current-password" />
+
+    <p class="error-msg" id="mysdu-error"></p>
+  </div>
+
+  <button class="calc-btn" id="mysdu-btn" onclick="importMySdu()">Fetch from MySdu</button>
+
+  <!-- Results -->
+  <div class="result-box" id="mysdu-result" style="display:none">
+    <div class="result-label" style="margin-bottom:12px">Import Complete</div>
+    <div id="mysdu-summary" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="calc-btn" onclick="applyMySduToGPA()" style="flex:1;min-width:140px">→ Fill GPA History</button>
+      <button class="calc-btn" onclick="applyMySduToAttendance()" style="flex:1;min-width:160px">→ Fill Attendance</button>
+    </div>
+  </div>
 </div>
 
 <script src="app.js"></script>

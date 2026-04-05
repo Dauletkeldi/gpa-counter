@@ -781,6 +781,141 @@ function downloadCard() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  MYSDU IMPORT
+// ═══════════════════════════════════════════════════════════
+
+let _mysduData = null;   // cached last fetch result
+
+async function importMySdu() {
+  const user = document.getElementById('mysdu-user').value.trim();
+  const pass = document.getElementById('mysdu-pass').value.trim();
+  const errEl = document.getElementById('mysdu-error');
+  const btn   = document.getElementById('mysdu-btn');
+
+  errEl.classList.remove('show');
+  if (!user || !pass) {
+    errEl.textContent = 'Please enter username and password.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+
+  try {
+    const resp = await fetch('http://127.0.0.1:5001/api/mysdu', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      errEl.textContent = data.error || 'Request failed — is the backend running?';
+      errEl.classList.add('show');
+      return;
+    }
+
+    _mysduData = data;
+    renderMySduSummary(data);
+    document.getElementById('mysdu-result').style.display = 'block';
+
+  } catch (e) {
+    errEl.textContent = 'Cannot reach backend. Make sure server.py is running on port 5001.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Fetch from MySdu';
+  }
+}
+
+function renderMySduSummary(data) {
+  const el = document.getElementById('mysdu-summary');
+  const { transcript = [], attendance = [] } = data;
+
+  let html = '';
+
+  if (transcript.length) {
+    html += `<div style="font-weight:700;font-size:.9rem;color:var(--accent2);margin-bottom:4px">📚 Transcript — ${transcript.length} semester(s)</div>`;
+    transcript.forEach((sem, i) => {
+      const spa = sem.spa != null ? sem.spa.toFixed(2) : '?';
+      const gpa = sem.gpa != null ? sem.gpa.toFixed(2) : '?';
+      const courses = sem.courses ? sem.courses.length : 0;
+      html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.83rem">
+        <span style="font-weight:600">${sem.semester || 'Semester ' + (i+1)}</span>
+        <span style="float:right;color:var(--muted)">${courses} courses</span>
+        <div style="margin-top:4px;color:var(--muted)">SPA: <strong style="color:var(--accent2)">${spa}</strong> &nbsp; GPA: <strong style="color:var(--accent2)">${gpa}</strong> &nbsp; Credits: <strong>${sem.sa ?? '?'}</strong></div>
+      </div>`;
+    });
+  } else {
+    html += `<div style="color:var(--muted);font-size:.85rem">No transcript data found.</div>`;
+  }
+
+  if (attendance.length) {
+    html += `<div style="font-weight:700;font-size:.9rem;color:var(--accent2);margin:10px 0 4px">📋 Attendance — ${attendance.length} course(s)</div>`;
+    attendance.forEach(c => {
+      const danger = c.absence_pct >= 25;
+      const color  = c.absence_pct >= 30 ? '#ef4444' : c.absence_pct >= 25 ? '#f97316' : '#22c55e';
+      html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.83rem">
+        <span style="font-weight:600">${c.course}</span>
+        <span style="float:right;color:${color};font-weight:700">${c.absence_pct.toFixed(1)}% absent</span>
+      </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function applyMySduToGPA() {
+  if (!_mysduData || !_mysduData.transcript) return;
+  const sems = _mysduData.transcript.filter(s => s.sa && s.spa != null);
+  if (!sems.length) return;
+
+  // Clear history rows and add imported ones
+  const histContainer = document.getElementById('hist-rows');
+  histContainer.innerHTML = '';
+  sems.forEach(s => {
+    addHistRow();
+    const rows = histContainer.querySelectorAll('.course-row');
+    const last = rows[rows.length - 1];
+    if (!last) return;
+    const inputs = last.querySelectorAll('input');
+    if (inputs[0]) inputs[0].value = s.semester || '';
+    if (inputs[1]) inputs[1].value = s.sa ?? '';
+    if (inputs[2]) inputs[2].value = s.spa != null ? s.spa.toFixed(2) : '';
+  });
+
+  saveData('hist');
+  const histBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('History'));
+  if (histBtn) switchTab('history', histBtn);
+  setTimeout(() => renderHistory(), 100);
+}
+
+function applyMySduToAttendance() {
+  if (!_mysduData || !_mysduData.attendance) return;
+  const courses = _mysduData.attendance;
+  if (!courses.length) return;
+
+  const attContainer = document.getElementById('att-rows');
+  attContainer.innerHTML = '';
+  courses.forEach(c => {
+    addAttRow();
+    const rows = attContainer.querySelectorAll('.course-row');
+    const last = rows[rows.length - 1];
+    if (!last) return;
+    const inputs = last.querySelectorAll('input');
+    if (inputs[0]) inputs[0].value = c.course;
+    if (inputs[1]) inputs[1].value = c.total_hours ?? '';
+    if (inputs[2]) inputs[2].value = c.absence_pct != null ? c.absence_pct.toFixed(1) : '';
+  });
+
+  const attBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('Attendance'));
+  if (attBtn) switchTab('attendance', attBtn);
+  setTimeout(() => calcAttendance(), 100);
+}
+
+// ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
 loadSaved();
